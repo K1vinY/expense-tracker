@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title">💰 Pixel Expense Tracker</h1>
+            <div class="balance-display">
+                <span class="balance-label">Total Balance:</span>
+                <span class="balance-amount" id="totalBalance">$0</span>
+            </div>
+        </header>
+
+        <!-- Groups Overview Section -->
+        <section class="groups-section">
+            <div class="groups-container">
+                <h2 class="section-title">📁 My Groups</h2>
+                <div class="groups-grid" id="groupsGrid">
+                    <!-- Groups will be dynamically inserted here -->
+                </div>
+                <button id="addGroupBtn" class="pixel-button primary add-group-btn">➕ Add New Group</button>
+            </div>
+        </section>
+
+        <!-- Group Member Management Section (Hidden by default) -->
+        <section class="group-members-section" id="groupMembersSection" style="display: none;">
+            <div class="group-members-container">
+                <div class="group-header">
+                    <button id="backFromMembers" class="pixel-button secondary">← Back to Transactions</button>
+                    <h2 class="group-title" id="membersGroupTitle">Group Members</h2>
+                    <div class="member-count" id="memberCount">0 members</div>
+                </div>
+
+                <!-- Members List -->
+                <div class="list-container">
+                    <h3 class="section-title">📋 Group Members</h3>
+                    <div id="membersList" class="members-list">
+                        <!-- Members will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Add Member Form -->
+                <div class="form-container">
+                    <h3 class="section-title">👥 Add New Member</h3>
+                    <form id="addMemberForm" class="pixel-form">
+                        <div class="form-group">
+                            <label for="memberName">Member Name:</label>
+                            <input type="text" id="memberName" placeholder="e.g. John Doe" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="memberRole">Role:</label>
+                            <select id="memberRole">
+                                <option value="member">👤 Member</option>
+                                <option value="admin">👑 Admin</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="pixel-button primary">➕ Add Member</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Group Settings Section (Hidden by default) -->
+        <section class="group-settings-section" id="groupSettingsSection" style="display: none;">
+            <div class="group-settings-container">
+                <div class="group-header">
+                    <button id="backFromSettings" class="pixel-button secondary">← Back to Transactions</button>
+                    <h2 class="group-title" id="settingsGroupTitle">Group Settings</h2>
+                    <div class="settings-status" id="settingsStatus">Active</div>
+                </div>
+
+                <!-- Group Information -->
+            <div class="form-container">
+                    <h3 class="section-title">📝 Group Information</h3>
+                    <form id="groupInfoForm" class="pixel-form">
+                    <div class="form-group">
+                            <label for="groupNameEdit">Group Name:</label>
+                            <input type="text" id="groupNameEdit" placeholder="Enter group name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                            <label for="groupDescription">Description (optional):</label>
+                            <textarea id="groupDescription" placeholder="Enter group description" rows="3"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="pixel-button primary">💾 Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Privacy Settings -->
+                <div class="list-container">
+                    <h3 class="section-title">🔒 Privacy Settings</h3>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-name">Group Visibility</div>
+                                <div class="setting-desc">Who can see this group</div>
+                            </div>
+                            <select id="groupVisibility" class="pixel-select">
+                                <option value="public">🌍 Public</option>
+                                <option value="private">🔒 Private</option>
+                            </select>
+                    </div>
+                    
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-name">Member Invitations</div>
+                                <div class="setting-desc">Who can invite new members</div>
+                            </div>
+                            <select id="invitePermission" class="pixel-select">
+                                <option value="admin">👑 Admins only</option>
+                                <option value="all">👥 All members</option>
+                        </select>
+                        </div>
+                    </div>
+                    </div>
+                    
+                <!-- Notification Settings -->
+                <div class="stats-container">
+                    <h3 class="section-title">📧 Notification Settings</h3>
+                    <div class="settings-grid">
+                        <div class="setting-card">
+                            <div class="setting-icon">💰</div>
+                            <div class="setting-label">New Transactions</div>
+                            <div class="setting-value">Enabled</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-icon">👥</div>
+                            <div class="setting-label">New Members</div>
+                            <div class="setting-value">Enabled</div>
+                        </div>
+                        <div class="setting-card">
+                            <div class="setting-icon">📊</div>
+                            <div class="setting-label">Weekly Reports</div>
+                            <div class="setting-value">Disabled</div>
+                        </div>
+                        </div>
+                    </div>
+                    
+                <!-- Danger Zone -->
+                <div class="stats-container danger-zone">
+                    <h3 class="section-title">⚠️ Danger Zone</h3>
+                    <div class="danger-actions">
+                        <button id="deleteGroup" class="pixel-button danger">🗑️ Delete Group</button>
+                        <button id="leaveGroup" class="pixel-button danger">👋 Leave Group</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Group Detail Section (Hidden by default) -->
+        <section class="group-detail-section" id="groupDetailSection" style="display: none;">
+            <div class="group-detail-container">
+                <div class="group-header">
+                    <button id="backToGroups" class="pixel-button secondary">← Back to Groups</button>
+                    <h2 class="group-title" id="groupTitle">Group Transactions</h2>
+                    <div class="group-balance" id="groupBalance">$0</div>
+                </div>
+
+                <!-- Group Actions -->
+                <div class="group-actions">
+                    <button id="manageMembers" class="pixel-button secondary">👥 Manage Members</button>
+                    <button id="groupSettings" class="pixel-button secondary">⚙️ Settings</button>
+                </div>
+
+                <!-- Expense Form -->
+                <div class="form-container">
+                    <h3 class="section-title">📝 Add Transaction</h3>
+                    <form id="expenseForm" class="pixel-form">
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <input type="text" id="description" placeholder="e.g. Lunch" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">Amount:</label>
+                            <input type="number" id="amount" placeholder="0" step="0.01" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transactionDate">Date & Time:</label>
+                            <input type="datetime-local" id="transactionDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="paidBy">Paid by:</label>
+                            <select id="paidBy" required>
+                                <option value="">Select who paid</option>
+                    </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="splitBy">Split by:</label>
+                            <div id="splitByContainer" class="split-container">
+                                <!-- Split options will be dynamically inserted here -->
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="pixel-button primary">💾 Save</button>
+                    </form>
+                </div>
+
+                <!-- Transaction List -->
+                <div class="list-container">
+                    <h3 class="section-title">📋 Transactions</h3>
+                    <div class="filter-controls">
+                        <button id="clearAll" class="pixel-button danger">🗑️ Clear All</button>
+                </div>
+                <div id="expenseList" class="expense-list">
+                        <!-- Transaction items will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+            <div class="stats-container">
+                    <h3 class="section-title">📊 Statistics</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                            <div class="stat-label">Total Income</div>
+                        <div class="stat-value income" id="totalIncome">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📉</div>
+                            <div class="stat-label">Total Expense</div>
+                        <div class="stat-value expense" id="totalExpense">$0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                            <div class="stat-label">Records</div>
+                        <div class="stat-value" id="totalRecords">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Firebase SDK (暫時註解，使用本地版本) -->
+    <!-- <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script> -->
+
+    <script>
+        // 暫時使用本地版本進行測試
+        // 當您設定好 Firebase 後，請取消註解上面的 Firebase SDK 並註解下面的本地版本
+        
+        // 本地版本 - 使用 localStorage
+        const isLocalMode = true; // 設定為 false 當您要使用 Firebase 時
+
+        // Group-based Expense Tracker (支援本地和 Firebase 模式)
+        class GroupExpenseTracker {
+            constructor() {
+                this.groups = [];
+                this.currentGroupId = null;
+                this.init();
+            }
+            
+            init() {
+                this.loadGroups();
+                this.bindEvents();
+            }
+            
+            async loadGroups() {
+                if (isLocalMode) {
+                    // 本地模式
+                    this.groups = JSON.parse(localStorage.getItem('groups')) || [];
+                    this.renderGroups();
+                    this.updateTotalBalance();
+                } else {
+                    // Firebase 模式
+                    try {
+                        const snapshot = await db.collection('groups').orderBy('createdAt', 'desc').get();
+                        this.groups = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        }));
+                        this.renderGroups();
+                        this.updateTotalBalance();
+                    } catch (error) {
+                        console.error('Error loading groups:', error);
+                        this.groups = [];
+                        this.renderGroups();
+                    }
+                }
+            }
+            
+            bindEvents() {
+                // Group management
+                document.getElementById('addGroupBtn').addEventListener('click', () => {
+                    this.addGroup();
+                });
+                
+                document.getElementById('backToGroups').addEventListener('click', () => {
+                    this.showGroupsView();
+                });
+                
+                document.getElementById('backFromMembers').addEventListener('click', () => {
+                    this.showGroupDetail(this.currentGroupId);
+                });
+                
+                // Member management
+                document.getElementById('addMemberForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addMember();
+                });
+                
+                document.getElementById('manageMembers').addEventListener('click', () => {
+                    this.showGroupMembers(this.currentGroupId);
+                });
+                
+                document.getElementById('groupSettings').addEventListener('click', () => {
+                    this.showGroupSettings(this.currentGroupId);
+                });
+                
+                document.getElementById('backFromSettings').addEventListener('click', () => {
+                    this.showGroupDetail(this.currentGroupId);
+                });
+                
+                document.getElementById('groupInfoForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.updateGroupInfo();
+                });
+                
+                document.getElementById('deleteGroup').addEventListener('click', () => {
+                    this.deleteGroup();
+                });
+                
+                document.getElementById('leaveGroup').addEventListener('click', () => {
+                    this.leaveGroup();
+                });
+                
+                // Expense management
+                document.getElementById('expenseForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addExpense();
+                });
+                
+                document.getElementById('clearAll').addEventListener('click', () => {
+                    this.clearAllExpenses();
+                });
+            }
+            
+            async addGroup() {
+                const groupName = prompt('Enter group name:');
+                if (!groupName) return;
+                
+                // 創建群組後直接進入成員管理頁面
+                const group = {
+                    id: Date.now().toString(),
+                    name: groupName,
+                    expenses: [],
+                    members: [
+                        {
+                            id: Date.now().toString(),
+                            name: 'You',
+                            role: 'admin',
+                            joinedAt: new Date().toISOString()
+                        }
+                    ],
+                    createdAt: new Date().toISOString()
+                };
+                
+                this.groups.unshift(group);
+                this.saveGroups();
+                this.renderGroups();
+                
+                // 直接進入成員管理頁面
+                this.showGroupMembers(group.id);
+            }
+            
+            showGroupMembers(groupId) {
+                this.currentGroupId = groupId;
+                const group = this.groups.find(g => g.id === groupId);
+                
+                document.getElementById('membersGroupTitle').textContent = `${group.name} - Members`;
+                document.getElementById('memberCount').textContent = `${group.members.length} members`;
+                document.getElementById('groupMembersSection').style.display = 'block';
+                document.querySelector('.groups-section').style.display = 'none';
+                document.getElementById('groupDetailSection').style.display = 'none';
+                document.getElementById('groupSettingsSection').style.display = 'none';
+                
+                this.renderMembers();
+            }
+            
+            showGroupDetail(groupId) {
+                this.currentGroupId = groupId;
+                const group = this.groups.find(g => g.id === groupId);
+                
+                document.getElementById('groupTitle').textContent = `${group.name} - Transactions`;
+                document.getElementById('groupDetailSection').style.display = 'block';
+                document.querySelector('.groups-section').style.display = 'none';
+                document.getElementById('groupMembersSection').style.display = 'none';
+                document.getElementById('groupSettingsSection').style.display = 'none';
+                
+                this.loadGroupMembers();
+                this.renderExpenses();
+                this.updateGroupStats();
+            }
+            
+            showGroupSettings(groupId) {
+                this.currentGroupId = groupId;
+                const group = this.groups.find(g => g.id === groupId);
+                
+                document.getElementById('settingsGroupTitle').textContent = `${group.name} - Settings`;
+                document.getElementById('groupSettingsSection').style.display = 'block';
+                document.querySelector('.groups-section').style.display = 'none';
+                document.getElementById('groupDetailSection').style.display = 'none';
+                document.getElementById('groupMembersSection').style.display = 'none';
+                
+                // 載入群組資訊到表單
+                document.getElementById('groupNameEdit').value = group.name;
+                document.getElementById('groupDescription').value = group.description || '';
+                document.getElementById('groupVisibility').value = group.visibility || 'public';
+                document.getElementById('invitePermission').value = group.invitePermission || 'admin';
+            }
+            
+            showGroupsView() {
+                document.getElementById('groupDetailSection').style.display = 'none';
+                document.getElementById('groupMembersSection').style.display = 'none';
+                document.getElementById('groupSettingsSection').style.display = 'none';
+                document.querySelector('.groups-section').style.display = 'block';
+                this.currentGroupId = null;
+                this.updateTotalBalance();
+            }
+            
+            async addExpense() {
+                if (!this.currentGroupId) {
+                    console.log('No current group ID');
+                    return;
+                }
+                
+                const description = document.getElementById('description').value;
+                const amount = parseFloat(document.getElementById('amount').value);
+                const transactionDate = document.getElementById('transactionDate').value;
+                const paidBy = document.getElementById('paidBy').value;
+                
+                console.log('Form data:', { description, amount, transactionDate, paidBy });
+                
+                if (!description || !amount || !paidBy) {
+                    alert('Please fill in all required fields.');
+                    return;
+                }
+                
+                // 獲取分錢的成員
+                const splitBy = this.getSplitByMembers();
+                console.log('Split by members:', splitBy);
+                
+                if (splitBy.length === 0) {
+                    alert('Please select at least one person to split the cost with.');
+                    return;
+                }
+                
+                const expense = {
+                    description,
+                    amount: Math.abs(amount), // 只儲存正數
+                    paidBy,
+                    splitBy,
+                    date: new Date(transactionDate).toISOString(),
+                    timestamp: Date.now()
+                };
+                
+                console.log('New expense:', expense);
+                
+                if (isLocalMode) {
+                    // 本地模式
+                    const group = this.groups.find(g => g.id === this.currentGroupId);
+                    group.expenses.push(expense);
+                    this.saveGroups();
+                    this.renderExpenses();
+                    this.updateGroupStats();
+                    this.updateTotalBalance();
+                    this.resetForm();
+                    console.log('Expense added successfully');
+                } else {
+                    // Firebase 模式
+                    try {
+                        await db.collection('groups').doc(this.currentGroupId).update({
+                            expenses: firebase.firestore.FieldValue.arrayUnion(expense)
+                        });
+                        
+                        // Update local data
+                        const group = this.groups.find(g => g.id === this.currentGroupId);
+                        group.expenses.push(expense);
+                        
+                        this.renderExpenses();
+                        this.updateGroupStats();
+                        this.updateTotalBalance();
+                        this.resetForm();
+                    } catch (error) {
+                        console.error('Error adding expense:', error);
+                        alert('Failed to add expense. Please try again.');
+                    }
+                }
+            }
+            
+            async deleteExpense(timestamp) {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const expenseToDelete = group.expenses.find(expense => expense.timestamp === timestamp);
+                
+                if (!expenseToDelete) return;
+                
+                if (isLocalMode) {
+                    // 本地模式
+                    group.expenses = group.expenses.filter(expense => expense.timestamp !== timestamp);
+                    this.saveGroups();
+                    this.renderExpenses();
+                    this.updateGroupStats();
+                    this.updateTotalBalance();
+                } else {
+                    // Firebase 模式
+                    try {
+                        await db.collection('groups').doc(this.currentGroupId).update({
+                            expenses: firebase.firestore.FieldValue.arrayRemove(expenseToDelete)
+                        });
+                        
+                        // Update local data
+                        group.expenses = group.expenses.filter(expense => expense.timestamp !== timestamp);
+                        
+                this.renderExpenses();
+                        this.updateGroupStats();
+                        this.updateTotalBalance();
+                    } catch (error) {
+                        console.error('Error deleting expense:', error);
+                        alert('Failed to delete expense. Please try again.');
+                    }
+                }
+            }
+            
+            async clearAllExpenses() {
+                if (!confirm('Are you sure you want to clear all transactions in this group?')) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                
+                if (isLocalMode) {
+                    // 本地模式
+                    group.expenses = [];
+                    this.saveGroups();
+                    this.renderExpenses();
+                    this.updateGroupStats();
+                    this.updateTotalBalance();
+                } else {
+                    // Firebase 模式
+                    try {
+                        await db.collection('groups').doc(this.currentGroupId).update({
+                            expenses: []
+                        });
+                        
+                        // Update local data
+                        group.expenses = [];
+                        
+                        this.renderExpenses();
+                        this.updateGroupStats();
+                        this.updateTotalBalance();
+                    } catch (error) {
+                        console.error('Error clearing expenses:', error);
+                        alert('Failed to clear expenses. Please try again.');
+                    }
+                }
+            }
+            
+            saveGroups() {
+                if (isLocalMode) {
+                    localStorage.setItem('groups', JSON.stringify(this.groups));
+                }
+            }
+            
+            addMember() {
+                const memberName = document.getElementById('memberName').value;
+                const memberRole = document.getElementById('memberRole').value;
+                
+                if (!memberName) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const member = {
+                    id: Date.now().toString(),
+                    name: memberName,
+                    role: memberRole,
+                    joinedAt: new Date().toISOString()
+                };
+                
+                group.members.push(member);
+                this.saveGroups();
+                this.renderMembers();
+                this.updateMemberCount();
+                this.resetMemberForm();
+            }
+            
+            removeMember(memberId) {
+                if (!confirm('Are you sure you want to remove this member?')) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                group.members = group.members.filter(member => member.id !== memberId);
+                
+                this.saveGroups();
+                this.renderMembers();
+                this.updateMemberCount();
+            }
+            
+            renderMembers() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const list = document.getElementById('membersList');
+                
+                if (group.members.length === 0) {
+                    list.innerHTML = '<div class="no-data">👥 No members yet</div>';
+                    return;
+                }
+                
+                list.innerHTML = group.members.map(member => this.createMemberItem(member)).join('');
+            }
+            
+            createMemberItem(member) {
+                const roleIcon = member.role === 'admin' ? '👑' : '👤';
+                const roleClass = member.role === 'admin' ? 'admin' : 'member';
+                
+                return `
+                    <div class="member-item">
+                        <div class="member-info">
+                            <div class="member-name">${roleIcon} ${member.name}</div>
+                            <div class="member-role ${roleClass}">${member.role}</div>
+                            <div class="member-joined">Joined: ${new Date(member.joinedAt).toLocaleDateString('en-US')}</div>
+                        </div>
+                        <button class="delete-btn" onclick="expenseTracker.removeMember('${member.id}')">❌</button>
+                    </div>
+                `;
+            }
+            
+            updateMemberCount() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                document.getElementById('memberCount').textContent = `${group.members.length} members`;
+            }
+            
+            resetMemberForm() {
+                document.getElementById('addMemberForm').reset();
+            }
+            
+            updateGroupInfo() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const newName = document.getElementById('groupNameEdit').value;
+                const description = document.getElementById('groupDescription').value;
+                const visibility = document.getElementById('groupVisibility').value;
+                const invitePermission = document.getElementById('invitePermission').value;
+                
+                if (!newName) return;
+                
+                group.name = newName;
+                group.description = description;
+                group.visibility = visibility;
+                group.invitePermission = invitePermission;
+                
+                this.saveGroups();
+                this.renderGroups();
+                
+                // 更新群組詳情頁面的標題
+                document.getElementById('groupTitle').textContent = newName;
+                
+                alert('Group information updated successfully!');
+            }
+            
+            deleteGroup() {
+                if (!this.currentGroupId) return;
+                
+                const groupName = this.groups.find(g => g.id === this.currentGroupId).name;
+                
+                if (!confirm(`Are you sure you want to delete the group "${groupName}"? This action cannot be undone!`)) {
+                    return;
+                }
+                
+                if (!confirm('This will permanently delete all transactions and members. Are you absolutely sure?')) {
+                    return;
+                }
+                
+                this.groups = this.groups.filter(g => g.id !== this.currentGroupId);
+                this.saveGroups();
+                this.renderGroups();
+                this.showGroupsView();
+                
+                alert('Group deleted successfully!');
+            }
+            
+            leaveGroup() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const groupName = group.name;
+                
+                if (!confirm(`Are you sure you want to leave the group "${groupName}"?`)) {
+                    return;
+                }
+                
+                // 移除當前用戶（假設是第一個成員）
+                if (group.members.length > 1) {
+                    group.members = group.members.slice(1);
+                    this.saveGroups();
+                    this.renderGroups();
+                    this.showGroupsView();
+                    alert('You have left the group!');
+                } else {
+                    // 如果是最後一個成員，刪除整個群組
+                    this.deleteGroup();
+                }
+            }
+            
+            renderGroups() {
+                const grid = document.getElementById('groupsGrid');
+                
+                if (this.groups.length === 0) {
+                    grid.innerHTML = '<div class="no-data">📁 No groups yet. Create your first group!</div>';
+                    return;
+                }
+                
+                grid.innerHTML = this.groups.map(group => this.createGroupCard(group)).join('');
+            }
+            
+            createGroupCard(group) {
+                const totalIncome = group.expenses
+                    .filter(e => e.type === 'income')
+                    .reduce((sum, e) => sum + e.amount, 0);
+                
+                const totalExpense = group.expenses
+                    .filter(e => e.type === 'expense')
+                    .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+                
+                const balance = totalIncome - totalExpense;
+                const balanceClass = balance >= 0 ? 'income' : 'expense';
+                const memberCount = group.members ? group.members.length : 0;
+                
+                return `
+                    <div class="group-card" onclick="expenseTracker.showGroupDetail('${group.id}')">
+                        <div class="group-icon">📁</div>
+                        <div class="group-name">${group.name}</div>
+                        <div class="group-balance ${balanceClass}">$${balance.toFixed(2)}</div>
+                        <div class="group-transactions">${group.expenses.length} transactions</div>
+                        <div class="group-members">👥 ${memberCount} members</div>
+                    </div>
+                `;
+            }
+            
+            renderExpenses() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const list = document.getElementById('expenseList');
+                
+                list.innerHTML = group.expenses.length === 0 
+                    ? '<div class="no-data">📝 No transactions yet</div>'
+                    : group.expenses.map(expense => this.createExpenseItem(expense)).join('');
+            }
+            
+            createExpenseItem(expense) {
+                // Handle both Firestore timestamp and regular date
+                const date = expense.date && expense.date.toDate ? 
+                    expense.date.toDate() : 
+                    new Date(expense.date || expense.timestamp);
+                
+                // 獲取付錢的人和分錢的人的名稱
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const paidByName = group.members.find(m => m.id === expense.paidBy)?.name || 'Unknown';
+                const splitByNames = expense.splitBy.map(id => 
+                    group.members.find(m => m.id === id)?.name || 'Unknown'
+                ).join(', ');
+                
+                return `
+                    <div class="expense-item">
+                        <div class="expense-info">
+                            <div class="expense-description">${expense.description}</div>
+                            <div class="expense-details">
+                                <div class="expense-paid-by">💰 Paid by: ${paidByName}</div>
+                                <div class="expense-split-by">👥 Split by: ${splitByNames}</div>
+                                <div class="expense-date">📅 ${date.toLocaleDateString('en-US')} ${date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
+                            </div>
+                        </div>
+                        <div class="expense-amount">
+                            $${expense.amount.toFixed(2)}
+                        </div>
+                        <button class="delete-btn" onclick="expenseTracker.deleteExpense(${expense.timestamp})">❌</button>
+                    </div>
+                `;
+            }
+            
+            
+            updateGroupStats() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const totalAmount = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+                
+                // 計算每個成員的淨餘額
+                const memberBalances = {};
+                group.members.forEach(member => {
+                    memberBalances[member.id] = 0;
+                });
+                
+                group.expenses.forEach(expense => {
+                    const splitAmount = expense.amount / expense.splitBy.length;
+                    expense.splitBy.forEach(memberId => {
+                        memberBalances[memberId] -= splitAmount;
+                    });
+                    memberBalances[expense.paidBy] += expense.amount;
+                });
+                
+                document.getElementById('groupBalance').textContent = `$${totalAmount.toFixed(2)}`;
+                document.getElementById('totalIncome').textContent = `$${totalAmount.toFixed(2)}`;
+                document.getElementById('totalExpense').textContent = `$${totalAmount.toFixed(2)}`;
+                document.getElementById('totalRecords').textContent = group.expenses.length;
+            }
+            
+            updateTotalBalance() {
+                const totalAmount = this.groups.reduce((total, group) => {
+                    return total + group.expenses.reduce((sum, e) => sum + e.amount, 0);
+                }, 0);
+                
+                document.getElementById('totalBalance').textContent = `$${totalAmount.toFixed(2)}`;
+            }
+            
+            
+            resetForm() {
+                document.getElementById('expenseForm').reset();
+                // 設定預設時間為現在
+                const now = new Date();
+                const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                document.getElementById('transactionDate').value = localDateTime;
+            }
+            
+            loadGroupMembers() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const paidBySelect = document.getElementById('paidBy');
+                const splitByContainer = document.getElementById('splitByContainer');
+                
+                // 清空現有選項
+                paidBySelect.innerHTML = '<option value="">Select who paid</option>';
+                splitByContainer.innerHTML = '';
+                
+                // 添加成員到 Paid by 下拉選單
+                group.members.forEach(member => {
+                    const option = document.createElement('option');
+                    option.value = member.id;
+                    option.textContent = member.name;
+                    paidBySelect.appendChild(option);
+                });
+                
+                // 創建 Split by 選項
+                group.members.forEach(member => {
+                    const splitItem = document.createElement('div');
+                    splitItem.className = 'split-item';
+                    splitItem.innerHTML = `
+                        <label class="split-label">
+                            <input type="checkbox" class="split-checkbox" value="${member.id}" checked>
+                            <span class="split-custom"></span>
+                            ${member.name}
+                        </label>
+                    `;
+                    splitByContainer.appendChild(splitItem);
+                });
+            }
+            
+            getSplitByMembers() {
+                const checkboxes = document.querySelectorAll('.split-checkbox:checked');
+                return Array.from(checkboxes).map(checkbox => checkbox.value);
+            }
+        }
+        
+        // Initialize application
+        const expenseTracker = new GroupExpenseTracker();
+    </script>
+</body>
+</html>
