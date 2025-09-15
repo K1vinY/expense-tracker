@@ -195,8 +195,10 @@ class GroupsManager {
     }
     
     createGroupCard(group) {
-        // 計算總金額（所有交易的總和）
-        const totalAmount = group.expenses.reduce((sum, e) => sum + e.amount, 0);
+        // 計算總金額（只計算非 settlement 交易）
+        const totalAmount = group.expenses
+            .filter(expense => !expense.isSettlement)
+            .reduce((sum, e) => sum + e.amount, 0);
         const memberCount = group.members ? group.members.length : 0;
         
         return `
@@ -214,7 +216,7 @@ class GroupsManager {
         this.app.currentGroupId = groupId;
         const group = this.app.groups.find(g => g.id === groupId);
         
-        document.getElementById('groupTitle').textContent = `${group.name} - Transactions`;
+        document.getElementById('groupTitle').textContent = 'Transactions';
         document.querySelector('.group-detail-section').style.display = 'block';
         document.querySelector('.groups-section').style.display = 'none';
         document.querySelector('.group-members-section').style.display = 'none';
@@ -493,21 +495,37 @@ class GroupsManager {
             splitByText = splitByResults.join(', ');
         }
         
+        // 檢查是否為結算交易
+        const isSettlement = expense.isSettlement;
+        const settlementClass = isSettlement ? 'settlement-item' : '';
+        const settlementIcon = isSettlement ? '💸' : '';
+        
+        // 調試信息
+        console.log('Processing expense:', expense.description, 'isSettlement:', isSettlement);
+        if (isSettlement) {
+            console.log('Settlement transaction detected:', expense.description);
+            console.log('Settlement class:', settlementClass);
+        }
+        
         return `
-            <div class="expense-item">
+            <div class="expense-item ${settlementClass}">
                 <div class="expense-info">
-                    <div class="expense-description">${expense.description}</div>
+                    <div class="expense-description">
+                        ${settlementIcon} ${expense.description}
+                    </div>
                     <div class="expense-details">
                         <div class="expense-paid-by">💰 Paid by: ${paidByName}</div>
                         <div class="expense-split-by">👥 Split by: ${splitByText}</div>
                         <div class="expense-date">📅 ${date.toLocaleDateString('en-US')} ${date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
                     </div>
                 </div>
-                <div class="expense-amount">
+                <div class="expense-amount ${isSettlement ? 'settlement-amount' : ''}">
                     $${expense.amount.toFixed(2)}
                 </div>
-                <button class="edit-btn pixel-icon" onclick="app.expensesManager.startEditExpense(${expense.timestamp})">✎</button>
-                <button class="delete-btn" style="margin-left:8px" onclick="app.expensesManager.deleteExpense(${expense.timestamp})">✖</button>
+                ${!isSettlement ? `
+                    <button class="edit-btn pixel-icon" onclick="app.expensesManager.startEditExpense(${expense.timestamp})">✎</button>
+                ` : ''}
+                <button class="delete-btn" ${!isSettlement ? 'style="margin-left:8px"' : ''} onclick="app.expensesManager.deleteExpense(${expense.timestamp})">✖</button>
             </div>
         `;
     }
@@ -557,7 +575,10 @@ class GroupsManager {
         const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return;
         
-        const total = group.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+        // 只計算非 settlement 交易的總金額
+        const total = group.expenses
+            .filter(expense => !expense.isSettlement)
+            .reduce((sum, expense) => sum + expense.amount, 0);
         const balanceElement = document.getElementById('groupBalance');
         if (balanceElement) {
             balanceElement.textContent = `$${total.toFixed(2)}`;
@@ -642,7 +663,7 @@ class GroupsManager {
         this.renderGroups();
         
         // 更新群組詳情頁面的標題
-        document.getElementById('groupTitle').textContent = `${newName} - Transactions`;
+        document.getElementById('groupTitle').textContent = 'Transactions';
         
         alert('Group information updated successfully!');
     }

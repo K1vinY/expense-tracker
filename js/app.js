@@ -165,16 +165,33 @@ class GroupExpenseTracker {
     }
     
     showUserSettings() {
-        document.getElementById('userInfo').style.display = 'none';
+        // 隱藏群組相關頁面
         document.getElementById('loginForm').style.display = 'none';
         document.getElementById('registrationSection').style.display = 'none';
-        document.getElementById('userSettingsSection').style.display = 'block';
         document.getElementById('resetPasswordSection').style.display = 'none';
+        document.querySelector('.groups-section').style.display = 'none';
+        document.querySelector('.group-detail-section').style.display = 'none';
+        document.querySelector('.group-members-section').style.display = 'none';
+        document.querySelector('.group-settings-section').style.display = 'none';
+        document.querySelector('.group-balances-section').style.display = 'none';
+        
+        // 顯示用戶設定頁面
+        document.getElementById('userSettingsSection').style.display = 'block';
         this.loadUserSettings();
     }
     
     showResetPassword() {
+        // 隱藏群組相關頁面
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('registrationSection').style.display = 'none';
         document.getElementById('userSettingsSection').style.display = 'none';
+        document.querySelector('.groups-section').style.display = 'none';
+        document.querySelector('.group-detail-section').style.display = 'none';
+        document.querySelector('.group-members-section').style.display = 'none';
+        document.querySelector('.group-settings-section').style.display = 'none';
+        document.querySelector('.group-balances-section').style.display = 'none';
+        
+        // 顯示重設密碼頁面
         document.getElementById('resetPasswordSection').style.display = 'block';
     }
     
@@ -192,7 +209,7 @@ class GroupExpenseTracker {
         
         console.log('Showing group settings for:', group.name);
         
-        document.getElementById('settingsGroupTitle').textContent = `${group.name} - Settings`;
+        document.getElementById('settingsGroupTitle').textContent = 'Settings';
         document.querySelector('.group-settings-section').style.display = 'block';
         document.querySelector('.groups-section').style.display = 'none';
         document.querySelector('.group-detail-section').style.display = 'none';

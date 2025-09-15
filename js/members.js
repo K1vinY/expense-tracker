@@ -24,7 +24,7 @@ class MembersManager {
         
         console.log('Showing group members for:', group.name);
         
-        document.getElementById('membersGroupTitle').textContent = `${group.name} - Members`;
+        document.getElementById('membersGroupTitle').textContent = 'Members';
         document.getElementById('memberCount').textContent = `${group.members.length} members`;
         document.querySelector('.group-members-section').style.display = 'block';
         document.querySelector('.groups-section').style.display = 'none';
@@ -192,6 +192,25 @@ class MembersManager {
                     const groupName = group.name;
                     const currentUser = this.app.currentUser;
                     const invitedByName = currentUser ? (currentUser.displayName || currentUser.email.split('@')[0]) : 'Unknown User';
+
+                    // 檢查是否已經有相同群組、相同 email 的 pending 邀請，避免重複
+                    const existingInviteSnap = await this.db.collection('invitations')
+                        .where('groupId', '==', this.app.currentGroupId)
+                        .where('invitedEmail', '==', email)
+                        .where('status', '==', 'pending')
+                        .limit(1)
+                        .get();
+                    if (!existingInviteSnap.empty) {
+                        alert(`Invitation to ${email} is already pending for this group.`);
+                        // 仍確保本地 pendingMembers 有此 email
+                        await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                            pendingMembers: firebase.firestore.FieldValue.arrayUnion(email)
+                        });
+                        if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+                        if (!group.pendingMembers.includes(email)) group.pendingMembers.push(email);
+                        this.renderMembers();
+                        return;
+                    }
                     
                     await this.db.collection('invitations').add({
                         groupId: this.app.currentGroupId,

@@ -24,7 +24,7 @@ class BalancesManager {
         
         console.log('Showing group balances for:', group.name);
         
-        document.getElementById('balancesGroupTitle').textContent = `${group.name} - Balances`;
+        document.getElementById('balancesGroupTitle').textContent = 'Balances';
         document.querySelector('.group-balances-section').style.display = 'block';
         document.querySelector('.groups-section').style.display = 'none';
         document.querySelector('.group-detail-section').style.display = 'none';
@@ -224,6 +224,7 @@ class BalancesManager {
         `;
     }
     
+    
     renderSettlementSuggestions(balances) {
         const suggestions = this.generateSettlementSuggestions(balances);
         const container = document.getElementById('settlementSuggestions');
@@ -233,12 +234,74 @@ class BalancesManager {
             return;
         }
         
-        container.innerHTML = suggestions.map(suggestion => `
+        container.innerHTML = suggestions.map((suggestion, index) => `
             <div class="settlement-suggestion">
-                <div class="suggestion-text">${suggestion.text}</div>
-                <div class="suggestion-amount">${suggestion.amount}</div>
+                <div class="suggestion-icon">💸</div>
+                <div class="suggestion-content">
+                    <div class="suggestion-text">${suggestion.text}</div>
+                    <div class="suggestion-amount">${suggestion.amount}</div>
+                </div>
+                <button class="settle-suggestion-btn pixel-btn" onclick="app.balancesManager.settleSuggestion('${suggestion.debtorId}', '${suggestion.creditorId}', ${suggestion.amount.replace('$', '')})">
+                    SETTLE
+                </button>
             </div>
         `).join('');
+    }
+    
+    async settleSuggestion(debtorId, creditorId, amount) {
+        if (!this.app.currentGroupId) return;
+        
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        if (!group) return;
+        
+        // 獲取參與者名稱
+        const debtorName = await this.resolveDisplayName(debtorId);
+        const creditorName = await this.resolveDisplayName(creditorId);
+        
+        // 確認結算
+        const confirmMessage = `Confirm settlement: ${debtorName} pays $${amount} to ${creditorName}?`;
+        if (!confirm(confirmMessage)) return;
+        
+        try {
+            // 創建結算交易記錄
+            const settlementExpense = {
+                description: `Settlement: ${debtorName} paid ${creditorName}`,
+                amount: parseFloat(amount),
+                paidBy: debtorId,
+                splitBy: [creditorId],
+                date: new Date().toISOString(),
+                timestamp: Date.now(),
+                isSettlement: true
+            };
+            
+            if (this.isLocalMode) {
+                // 本地模式：直接添加到群組
+                group.expenses.push(settlementExpense);
+                this.app.groupsManager.saveGroups();
+            } else {
+                // Firebase 模式：添加到 Firestore
+                await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                    expenses: firebase.firestore.FieldValue.arrayUnion(settlementExpense)
+                });
+                
+                // 更新本地數據
+                group.expenses.push(settlementExpense);
+            }
+            
+            // 重新計算並顯示餘額
+            await this.renderBalances();
+            
+            // 如果當前在交易頁面，也要更新交易列表
+            if (document.querySelector('.group-detail-section').style.display !== 'none') {
+                await this.app.groupsManager.loadGroupExpenses();
+            }
+            
+            alert('Settlement recorded successfully!');
+            
+        } catch (error) {
+            console.error('Error settling suggestion:', error);
+            alert('Failed to record settlement. Please try again.');
+        }
     }
     
     generateSettlementSuggestions(balances) {
@@ -268,8 +331,11 @@ class BalancesManager {
             
             if (transferAmount > 0.01) {
                 suggestions.push({
-                    text: `${debtor.name} should pay ${creditor.name}`,
-                    amount: `$${transferAmount.toFixed(2)}`
+                    text: `${debtor.name} → ${creditor.name}`,
+                    amount: `$${transferAmount.toFixed(2)}`,
+                    debtorId: debtor.id,
+                    creditorId: creditor.id,
+                    transferAmount: transferAmount
                 });
                 
                 // 更新餘額
