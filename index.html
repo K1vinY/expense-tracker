@@ -14,9 +14,17 @@
         <!-- Header -->
         <header class="header">
             <h1 class="title">💰 Pixel Expense Tracker</h1>
-            <div class="balance-display">
-                <span class="balance-label">Total Balance:</span>
-                <span class="balance-amount" id="totalBalance">$0</span>
+            <div class="auth-section" id="authSection">
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <span id="userEmail"></span>
+                    <button id="logoutBtn" class="pixel-button secondary">Logout</button>
+                </div>
+                <div class="login-form" id="loginForm">
+                    <input type="email" id="emailInput" placeholder="Email" class="pixel-input">
+                    <input type="password" id="passwordInput" placeholder="Password" class="pixel-input">
+                    <button id="loginBtn" class="pixel-button primary">Login</button>
+                    <button id="registerBtn" class="pixel-button secondary">Register</button>
+                </div>
             </div>
         </header>
 
@@ -53,8 +61,8 @@
                     <h3 class="section-title">👥 Add New Member</h3>
                     <form id="addMemberForm" class="pixel-form">
                         <div class="form-group">
-                            <label for="memberName">Member Name:</label>
-                            <input type="text" id="memberName" placeholder="e.g. John Doe" required>
+                            <label for="memberName">Member Email:</label>
+                            <input type="email" id="memberName" placeholder="e.g. john@example.com" required>
                         </div>
                         
                         <div class="form-group">
@@ -98,55 +106,7 @@
                     </form>
                 </div>
 
-                <!-- Privacy Settings -->
-                <div class="list-container">
-                    <h3 class="section-title">🔒 Privacy Settings</h3>
-                    <div class="settings-list">
-                        <div class="setting-item">
-                            <div class="setting-info">
-                                <div class="setting-name">Group Visibility</div>
-                                <div class="setting-desc">Who can see this group</div>
-                            </div>
-                            <select id="groupVisibility" class="pixel-select">
-                                <option value="public">🌍 Public</option>
-                                <option value="private">🔒 Private</option>
-                            </select>
-                    </div>
                     
-                        <div class="setting-item">
-                            <div class="setting-info">
-                                <div class="setting-name">Member Invitations</div>
-                                <div class="setting-desc">Who can invite new members</div>
-                            </div>
-                            <select id="invitePermission" class="pixel-select">
-                                <option value="admin">👑 Admins only</option>
-                                <option value="all">👥 All members</option>
-                        </select>
-                        </div>
-                    </div>
-                    </div>
-                    
-                <!-- Notification Settings -->
-                <div class="stats-container">
-                    <h3 class="section-title">📧 Notification Settings</h3>
-                    <div class="settings-grid">
-                        <div class="setting-card">
-                            <div class="setting-icon">💰</div>
-                            <div class="setting-label">New Transactions</div>
-                            <div class="setting-value">Enabled</div>
-                        </div>
-                        <div class="setting-card">
-                            <div class="setting-icon">👥</div>
-                            <div class="setting-label">New Members</div>
-                            <div class="setting-value">Enabled</div>
-                        </div>
-                        <div class="setting-card">
-                            <div class="setting-icon">📊</div>
-                            <div class="setting-label">Weekly Reports</div>
-                            <div class="setting-value">Disabled</div>
-                        </div>
-                        </div>
-                    </div>
                     
                 <!-- Danger Zone -->
                 <div class="stats-container danger-zone">
@@ -227,8 +187,22 @@
                         
                         <div class="form-group">
                             <label for="splitBy">Split by:</label>
-                            <div id="splitByContainer" class="split-container">
-                                <!-- Split options will be dynamically inserted here -->
+                            <div class="split-options">
+                                <div class="split-mode-selector">
+                                    <label class="split-mode-option">
+                                        <input type="radio" name="splitMode" value="equal" checked>
+                                        <span class="split-mode-custom"></span>
+                                        Equal Split
+                                    </label>
+                                    <label class="split-mode-option">
+                                        <input type="radio" name="splitMode" value="custom">
+                                        <span class="split-mode-custom"></span>
+                                        Custom Amount
+                                    </label>
+                                </div>
+                                <div id="splitByContainer" class="split-container">
+                                    <!-- Split options will be dynamically inserted here -->
+                                </div>
                             </div>
                         </div>
                         
@@ -251,17 +225,32 @@
         </section>
     </div>
 
-    <!-- Firebase SDK (暫時註解，使用本地版本) -->
-    <!-- <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <script src="firebase-config.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+    <script src="firebase-config.js"></script>
 
     <script>
-        // 暫時使用本地版本進行測試
-        // 當您設定好 Firebase 後，請取消註解上面的 Firebase SDK 並註解下面的本地版本
+        // 等待 Firebase 初始化完成
+        let db;
+        let auth;
+        let currentUser = null;
+        let isLocalMode = false; // 設定為 false 使用 Firebase
         
-        // 本地版本 - 使用 localStorage
-        const isLocalMode = true; // 設定為 false 當您要使用 Firebase 時
+        // 確保 Firebase 已載入
+        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
+            db = window.db || firebase.firestore();
+            auth = firebase.auth();
+            console.log('Firebase initialized successfully');
+            console.log('Firebase db object:', db);
+            console.log('Firebase auth object:', auth);
+        } else {
+            console.error('Firebase not initialized properly');
+            // 如果 Firebase 載入失敗，切換到本地模式
+            isLocalMode = true;
+            console.log('Switching to local mode due to Firebase initialization failure');
+        }
 
         // Group-based Expense Tracker (支援本地和 Firebase 模式)
         class GroupExpenseTracker {
@@ -272,35 +261,251 @@
             }
             
             init() {
-                this.loadGroups();
+                this.setupAuth();
                 this.bindEvents();
+            }
+            
+            setupAuth() {
+                if (isLocalMode) {
+                    // 本地模式不需要身份驗證
+                    this.loadGroups();
+                    return;
+                }
+                
+                // 清理舊的本地數據
+                localStorage.removeItem('groups');
+                console.log('Cleared old local data');
+                
+                // 監聽身份驗證狀態變化
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // 用戶已登入
+                        currentUser = user;
+                        console.log('User signed in:', user.email);
+                        this.showUserInfo();
+                        this.loadGroups();
+                    } else {
+                        // 用戶未登入
+                        currentUser = null;
+                        console.log('User signed out');
+                        this.showLoginForm();
+                        this.groups = [];
+                        this.renderGroups();
+                    }
+                });
+            }
+            
+            showUserInfo() {
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('userEmail').textContent = currentUser.email;
+            }
+            
+            showLoginForm() {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'flex';
+            }
+            
+            async login() {
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                
+                if (!email || !password) {
+                    alert('Please enter both email and password');
+                    return;
+                }
+                
+                try {
+                    await auth.signInWithEmailAndPassword(email, password);
+                    console.log('Login successful');
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('Login failed: ' + error.message);
+                }
+            }
+            
+            async register() {
+                const email = document.getElementById('emailInput').value;
+                const password = document.getElementById('passwordInput').value;
+                
+                if (!email || !password) {
+                    alert('Please enter both email and password');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    alert('Password must be at least 6 characters');
+                    return;
+                }
+                
+                try {
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    // 創建用戶資料文檔
+                    await db.collection('users').doc(user.uid).set({
+                        email: email,
+                        displayName: email.split('@')[0], // 使用 email 前綴作為顯示名稱
+                        createdAt: new Date().toISOString(),
+                        lastLoginAt: new Date().toISOString()
+                    });
+                    
+                    // 檢查是否有待處理的邀請
+                    await this.checkPendingInvitations(user.uid, email);
+                    
+                    console.log('Registration successful');
+                } catch (error) {
+                    console.error('Registration error:', error);
+                    alert('Registration failed: ' + error.message);
+                }
+            }
+            
+            async checkPendingInvitations(userId, email) {
+                try {
+                    // 查找待處理的邀請
+                    const invitationsQuery = await db.collection('invitations')
+                        .where('invitedEmail', '==', email)
+                        .where('status', '==', 'pending')
+                        .get();
+                    
+                    if (!invitationsQuery.empty) {
+                        const invitations = [];
+                        invitationsQuery.forEach(doc => {
+                            invitations.push({ id: doc.id, ...doc.data() });
+                        });
+                        
+                        // 顯示邀請確認對話框
+                        this.showInvitationsDialog(invitations, userId);
+                    }
+                } catch (error) {
+                    console.error('Error checking invitations:', error);
+                }
+            }
+            
+            showInvitationsDialog(invitations, userId) {
+                let message = 'You have pending group invitations:\n\n';
+                invitations.forEach((inv, index) => {
+                    message += `${index + 1}. ${inv.groupName} (invited by ${inv.invitedBy})\n`;
+                });
+                message += '\nDo you want to accept all invitations?';
+                
+                if (confirm(message)) {
+                    this.acceptAllInvitations(invitations, userId);
+                }
+            }
+            
+            async acceptAllInvitations(invitations, userId) {
+                try {
+                    for (const invitation of invitations) {
+                        // 將用戶添加到群組
+                        await db.collection('groups').doc(invitation.groupId).update({
+                            members: firebase.firestore.FieldValue.arrayUnion(userId)
+                        });
+                        
+                        // 更新邀請狀態
+                        await db.collection('invitations').doc(invitation.id).update({
+                            status: 'accepted',
+                            acceptedAt: new Date().toISOString()
+                        });
+                    }
+                    
+                    alert('All invitations accepted! Please refresh the page to see your groups.');
+                } catch (error) {
+                    console.error('Error accepting invitations:', error);
+                    alert('Failed to accept some invitations. Please try again.');
+                }
+            }
+            
+            async logout() {
+                try {
+                    await auth.signOut();
+                    console.log('Logout successful');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    alert('Logout failed: ' + error.message);
+                }
             }
             
             async loadGroups() {
                 if (isLocalMode) {
                     // 本地模式
+                    console.log('Loading groups from localStorage');
                     this.groups = JSON.parse(localStorage.getItem('groups')) || [];
                     this.renderGroups();
                     this.updateTotalBalance();
                 } else {
                     // Firebase 模式
                     try {
-                        const snapshot = await db.collection('groups').orderBy('createdAt', 'desc').get();
+                        if (!db) {
+                            throw new Error('Firebase not initialized');
+                        }
+                        if (!currentUser) {
+                            console.log('No user logged in, cannot load groups');
+                            this.groups = [];
+                            this.renderGroups();
+                            return;
+                        }
+                        
+                        console.log('Loading groups from Firebase for user:', currentUser.uid);
+                        
+                        // 先測試基本查詢
+                        console.log('Testing basic query...');
+                        const testSnapshot = await db.collection('groups').limit(5).get();
+                        console.log('Basic query result:', testSnapshot.docs.length, 'documents');
+                        
+                        // 再嘗試用戶特定查詢
+                        console.log('Testing user-specific query...');
+                        const snapshot = await db.collection('groups')
+                            .where('members', 'array-contains', currentUser.uid)
+                            .get();
+                        
                         this.groups = snapshot.docs.map(doc => ({
                             id: doc.id,
                             ...doc.data()
                         }));
+                        console.log('Loaded groups from Firebase:', this.groups);
                         this.renderGroups();
                         this.updateTotalBalance();
                     } catch (error) {
                         console.error('Error loading groups:', error);
+                        console.error('Error code:', error.code);
+                        console.error('Error message:', error.message);
+                        console.log('Firebase error, showing empty groups');
                         this.groups = [];
                         this.renderGroups();
+                        this.updateTotalBalance();
+                        
+                        // 顯示詳細錯誤信息給用戶
+                        let errorMessage = 'Failed to load groups. ';
+                        if (error.code === 'permission-denied') {
+                            errorMessage += 'Permission denied. Please check Firestore security rules.';
+                        } else if (error.code === 'failed-precondition') {
+                            errorMessage += 'Database query failed. This might be due to missing index.';
+                        } else if (error.code === 'unavailable') {
+                            errorMessage += 'Firebase service is unavailable. Please check your internet connection.';
+                        } else {
+                            errorMessage += `Error: ${error.message} (Code: ${error.code})`;
+                        }
+                        
+                        alert(errorMessage);
                     }
                 }
             }
             
             bindEvents() {
+                // Authentication events
+                document.getElementById('loginBtn').addEventListener('click', () => {
+                    this.login();
+                });
+                
+                document.getElementById('registerBtn').addEventListener('click', () => {
+                    this.register();
+                });
+                
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    this.logout();
+                });
+                
                 // Group management
                 document.getElementById('addGroupBtn').addEventListener('click', () => {
                     this.addGroup();
@@ -365,6 +570,11 @@
             }
             
             async addGroup() {
+                if (!isLocalMode && !currentUser) {
+                    alert('Please login to create a group');
+                    return;
+                }
+                
                 const groupName = prompt('Enter group name:');
                 if (!groupName) return;
                 
@@ -373,20 +583,72 @@
                     id: Date.now().toString(),
                     name: groupName,
                     expenses: [],
-                    members: [
+                    members: isLocalMode ? [
                         {
                             id: Date.now().toString(),
                             name: 'You',
                             role: 'admin',
                             joinedAt: new Date().toISOString()
                         }
-                    ],
-                    createdAt: new Date().toISOString()
+                    ] : [currentUser.uid], // Firebase 模式使用用戶 UID
+                    createdAt: new Date().toISOString(),
+                    createdBy: isLocalMode ? 'local' : currentUser.uid
                 };
                 
-                this.groups.unshift(group);
-                this.saveGroups();
-                this.renderGroups();
+                console.log('Creating group with members:', group.members);
+                console.log('Current user UID:', currentUser.uid);
+                
+                if (isLocalMode) {
+                    // 本地模式
+                    this.groups.unshift(group);
+                    this.saveGroups();
+                    this.renderGroups();
+                } else {
+                    // Firebase 模式
+                    try {
+                        if (!db) {
+                            throw new Error('Firebase not initialized');
+                        }
+                        
+                        console.log('Creating group in Firebase:', group);
+                        console.log('Firebase db object:', db);
+                        console.log('Firebase app:', firebase.app());
+                        
+                        await db.collection('groups').doc(group.id).set(group);
+                        console.log('Group created successfully in Firebase');
+                        
+                        this.groups.unshift(group);
+                        this.renderGroups();
+                    } catch (error) {
+                        console.error('Error creating group:', error);
+                        console.error('Error details:', error.message);
+                        console.error('Error code:', error.code);
+                        
+                        // 如果 Firebase 失敗，切換到本地模式
+                        if (error.message === 'Firebase not initialized') {
+                            console.log('Firebase not available, switching to local mode');
+                            isLocalMode = true;
+                            this.groups.unshift(group);
+                            this.saveGroups();
+                            this.renderGroups();
+                        } else {
+                            // 顯示更詳細的錯誤信息
+                            let errorMessage = 'Failed to create group. ';
+                            if (error.code === 'permission-denied') {
+                                errorMessage += 'Permission denied. Please check Firestore security rules.';
+                            } else if (error.code === 'unavailable') {
+                                errorMessage += 'Firebase service is unavailable. Please check your internet connection.';
+                            } else if (error.code === 'not-found') {
+                                errorMessage += 'Firestore database not found. Please check your Firebase configuration.';
+                            } else {
+                                errorMessage += `Error: ${error.message}`;
+                            }
+                            
+                            alert(errorMessage);
+                            return;
+                        }
+                    }
+                }
                 
                 // 直接進入成員管理頁面
                 this.showGroupMembers(group.id);
@@ -420,6 +682,7 @@
                 this.loadGroupMembers();
                 this.renderExpenses();
                 this.updateGroupStats();
+                this.setDefaultDateTime();
             }
             
             showGroupSettings(groupId) {
@@ -435,8 +698,6 @@
                 // 載入群組資訊到表單
                 document.getElementById('groupNameEdit').value = group.name;
                 document.getElementById('groupDescription').value = group.description || '';
-                document.getElementById('groupVisibility').value = group.visibility || 'public';
-                document.getElementById('invitePermission').value = group.invitePermission || 'admin';
             }
             
             showGroupBalances(groupId) {
@@ -488,6 +749,16 @@
                 if (splitBy.length === 0) {
                     alert('Please select at least one person to split the cost with.');
                     return;
+                }
+                
+                // 驗證自訂金額模式的總額
+                const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
+                if (splitMode === 'custom') {
+                    const totalSplitAmount = splitBy.reduce((sum, item) => sum + item.amount, 0);
+                    if (Math.abs(totalSplitAmount - amount) > 0.01) {
+                        alert(`Total split amount ($${totalSplitAmount.toFixed(2)}) must equal the expense amount ($${amount.toFixed(2)}).`);
+                        return;
+                    }
                 }
                 
                 const expense = {
@@ -606,39 +877,106 @@
                 }
             }
             
-            addMember() {
-                const memberName = document.getElementById('memberName').value;
+            async addMember() {
+                const memberEmail = document.getElementById('memberName').value;
                 const memberRole = document.getElementById('memberRole').value;
                 
-                if (!memberName) return;
+                if (!memberEmail) return;
+                
+                // 驗證 email 格式
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(memberEmail)) {
+                    alert('Please enter a valid email address');
+                    return;
+                }
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
-                const member = {
-                    id: Date.now().toString(),
-                    name: memberName,
-                    role: memberRole,
-                    joinedAt: new Date().toISOString()
-                };
                 
-                group.members.push(member);
-                this.saveGroups();
+                if (isLocalMode) {
+                    // 本地模式
+                    const member = {
+                        id: Date.now().toString(),
+                        name: memberEmail,
+                        role: memberRole,
+                        joinedAt: new Date().toISOString()
+                    };
+                    group.members.push(member);
+                    this.saveGroups();
+                } else {
+                    // Firebase 模式
+                    try {
+                        // 先查找用戶是否存在
+                        const userQuery = await db.collection('users').where('email', '==', memberEmail).get();
+                        
+                        if (userQuery.empty) {
+                            // 用戶不存在，創建邀請記錄
+                            const invitation = {
+                                groupId: this.currentGroupId,
+                                groupName: group.name,
+                                invitedBy: currentUser.email,
+                                invitedEmail: memberEmail,
+                                role: memberRole,
+                                status: 'pending',
+                                createdAt: new Date().toISOString()
+                            };
+                            
+                            await db.collection('invitations').add(invitation);
+                            alert(`Invitation sent to ${memberEmail}. They will see this group when they register and accept the invitation.`);
+                        } else {
+                            // 用戶存在，直接添加到群組
+                            const userDoc = userQuery.docs[0];
+                            const userId = userDoc.id;
+                            
+                            await db.collection('groups').doc(this.currentGroupId).update({
+                                members: firebase.firestore.FieldValue.arrayUnion(userId)
+                            });
+                            
+                            // 更新本地數據
+                            group.members.push(userId);
+                            alert(`Member ${memberEmail} added successfully!`);
+                        }
+                    } catch (error) {
+                        console.error('Error adding member:', error);
+                        alert('Failed to add member. Please try again.');
+                        return;
+                    }
+                }
+                
                 this.renderMembers();
                 this.updateMemberCount();
                 this.resetMemberForm();
             }
             
-            removeMember(memberId) {
+            async removeMember(memberId) {
                 if (!confirm('Are you sure you want to remove this member?')) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
+                const memberToRemove = group.members.find(member => member.id === memberId);
+                
+                if (!memberToRemove) return;
+                
                 group.members = group.members.filter(member => member.id !== memberId);
                 
-                this.saveGroups();
+                if (isLocalMode) {
+                    this.saveGroups();
+                } else {
+                    // Firebase 模式
+                    try {
+                        await db.collection('groups').doc(this.currentGroupId).update({
+                            members: firebase.firestore.FieldValue.arrayRemove(memberToRemove)
+                        });
+                    } catch (error) {
+                        console.error('Error removing member:', error);
+                        alert('Failed to remove member. Please try again.');
+                        return;
+                    }
+                }
+                
                 this.renderMembers();
                 this.updateMemberCount();
             }
             
-            renderMembers() {
+            async renderMembers() {
                 if (!this.currentGroupId) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
@@ -649,7 +987,64 @@
                     return;
                 }
                 
-                list.innerHTML = group.members.map(member => this.createMemberItem(member)).join('');
+                if (isLocalMode) {
+                    // 本地模式：members 是物件陣列
+                    list.innerHTML = group.members.map(member => this.createMemberItem(member)).join('');
+                } else {
+                    // Firebase 模式：members 是 UID 陣列，需要查找用戶資料
+                    const memberData = await this.getMemberData(group.members);
+                    list.innerHTML = memberData.map(member => this.createMemberItem(member)).join('');
+                }
+            }
+            
+            async getMemberData(memberUids) {
+                if (isLocalMode) return memberUids;
+                
+                try {
+                    const memberPromises = memberUids.map(async (uid) => {
+                        if (uid === currentUser.uid) {
+                            return {
+                                id: uid,
+                                name: currentUser.email.split('@')[0],
+                                role: 'admin',
+                                joinedAt: new Date().toISOString()
+                            };
+                        }
+                        
+                        try {
+                            const userDoc = await db.collection('users').doc(uid).get();
+                            if (userDoc.exists) {
+                                const userData = userDoc.data();
+                                return {
+                                    id: uid,
+                                    name: userData.displayName || userData.email.split('@')[0],
+                                    role: 'member',
+                                    joinedAt: userData.createdAt || new Date().toISOString()
+                                };
+                            }
+                        } catch (error) {
+                            console.error('Error fetching user data for UID:', uid, error);
+                        }
+                        
+                        // 如果無法獲取用戶資料，使用 UID 作為名稱
+                        return {
+                            id: uid,
+                            name: uid.substring(0, 8) + '...',
+                            role: 'member',
+                            joinedAt: new Date().toISOString()
+                        };
+                    });
+                    
+                    return await Promise.all(memberPromises);
+                } catch (error) {
+                    console.error('Error getting member data:', error);
+                    return memberUids.map(uid => ({
+                        id: uid,
+                        name: uid === currentUser.uid ? 'You' : uid.substring(0, 8) + '...',
+                        role: uid === currentUser.uid ? 'admin' : 'member',
+                        joinedAt: new Date().toISOString()
+                    }));
+                }
             }
             
             createMemberItem(member) {
@@ -672,30 +1067,45 @@
                 if (!this.currentGroupId) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
-                document.getElementById('memberCount').textContent = `${group.members.length} members`;
+                if (group && group.members) {
+                    document.getElementById('memberCount').textContent = `${group.members.length} members`;
+                } else {
+                    document.getElementById('memberCount').textContent = '0 members';
+                }
             }
             
             resetMemberForm() {
                 document.getElementById('addMemberForm').reset();
             }
             
-            updateGroupInfo() {
+            async updateGroupInfo() {
                 if (!this.currentGroupId) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
                 const newName = document.getElementById('groupNameEdit').value;
                 const description = document.getElementById('groupDescription').value;
-                const visibility = document.getElementById('groupVisibility').value;
-                const invitePermission = document.getElementById('invitePermission').value;
                 
                 if (!newName) return;
                 
                 group.name = newName;
                 group.description = description;
-                group.visibility = visibility;
-                group.invitePermission = invitePermission;
                 
-                this.saveGroups();
+                if (isLocalMode) {
+                    this.saveGroups();
+                } else {
+                    // Firebase 模式
+                    try {
+                        await db.collection('groups').doc(this.currentGroupId).update({
+                            name: newName,
+                            description: description
+                        });
+                    } catch (error) {
+                        console.error('Error updating group info:', error);
+                        alert('Failed to update group information. Please try again.');
+                        return;
+                    }
+                }
+                
                 this.renderGroups();
                 
                 // 更新群組詳情頁面的標題
@@ -704,7 +1114,7 @@
                 alert('Group information updated successfully!');
             }
             
-            deleteGroup() {
+            async deleteGroup() {
                 if (!this.currentGroupId) return;
                 
                 const groupName = this.groups.find(g => g.id === this.currentGroupId).name;
@@ -717,15 +1127,28 @@
                     return;
                 }
                 
-                this.groups = this.groups.filter(g => g.id !== this.currentGroupId);
-                this.saveGroups();
+                if (isLocalMode) {
+                    this.groups = this.groups.filter(g => g.id !== this.currentGroupId);
+                    this.saveGroups();
+                } else {
+                    // Firebase 模式
+                    try {
+                        await db.collection('groups').doc(this.currentGroupId).delete();
+                        this.groups = this.groups.filter(g => g.id !== this.currentGroupId);
+                    } catch (error) {
+                        console.error('Error deleting group:', error);
+                        alert('Failed to delete group. Please try again.');
+                        return;
+                    }
+                }
+                
                 this.renderGroups();
                 this.showGroupsView();
                 
                 alert('Group deleted successfully!');
             }
             
-            leaveGroup() {
+            async leaveGroup() {
                 if (!this.currentGroupId) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
@@ -737,8 +1160,24 @@
                 
                 // 移除當前用戶（假設是第一個成員）
                 if (group.members.length > 1) {
+                    const memberToRemove = group.members[0];
                     group.members = group.members.slice(1);
-                    this.saveGroups();
+                    
+                    if (isLocalMode) {
+                        this.saveGroups();
+                    } else {
+                        // Firebase 模式
+                        try {
+                            await db.collection('groups').doc(this.currentGroupId).update({
+                                members: firebase.firestore.FieldValue.arrayRemove(memberToRemove)
+                            });
+                        } catch (error) {
+                            console.error('Error leaving group:', error);
+                            alert('Failed to leave group. Please try again.');
+                            return;
+                        }
+                    }
+                    
                     this.renderGroups();
                     this.showGroupsView();
                     alert('You have left the group!');
@@ -795,9 +1234,20 @@
                 // 獲取付錢的人和分錢的人的名稱
                 const group = this.groups.find(g => g.id === this.currentGroupId);
                 const paidByName = group.members.find(m => m.id === expense.paidBy)?.name || 'Unknown';
-                const splitByNames = expense.splitBy.map(id => 
-                    group.members.find(m => m.id === id)?.name || 'Unknown'
-                ).join(', ');
+                
+                let splitByText = '';
+                if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
+                    // 自訂金額模式
+                    splitByText = expense.splitBy.map(splitItem => {
+                        const memberName = group.members.find(m => m.id === splitItem.memberId)?.name || 'Unknown';
+                        return `${memberName} ($${splitItem.amount.toFixed(2)})`;
+                    }).join(', ');
+                } else {
+                    // 平分模式
+                    splitByText = expense.splitBy.map(id => 
+                        group.members.find(m => m.id === id)?.name || 'Unknown'
+                    ).join(', ');
+                }
                 
                 return `
                     <div class="expense-item">
@@ -805,7 +1255,7 @@
                             <div class="expense-description">${expense.description}</div>
                             <div class="expense-details">
                                 <div class="expense-paid-by">💰 Paid by: ${paidByName}</div>
-                                <div class="expense-split-by">👥 Split by: ${splitByNames}</div>
+                                <div class="expense-split-by">👥 Split by: ${splitByText}</div>
                                 <div class="expense-date">📅 ${date.toLocaleDateString('en-US')} ${date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
                             </div>
                         </div>
@@ -829,23 +1279,24 @@
             }
             
             updateTotalBalance() {
-                const totalAmount = this.groups.reduce((total, group) => {
-                    return total + group.expenses.reduce((sum, e) => sum + e.amount, 0);
-                }, 0);
-                
-                document.getElementById('totalBalance').textContent = `$${totalAmount.toFixed(2)}`;
+                // 總餘額顯示已移除，此方法保留以備將來使用
+                return;
             }
             
             
             resetForm() {
                 document.getElementById('expenseForm').reset();
                 // 設定預設時間為現在
+                this.setDefaultDateTime();
+            }
+            
+            setDefaultDateTime() {
                 const now = new Date();
                 const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
                 document.getElementById('transactionDate').value = localDateTime;
             }
             
-            loadGroupMembers() {
+            async loadGroupMembers() {
                 if (!this.currentGroupId) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
@@ -856,32 +1307,101 @@
                 paidBySelect.innerHTML = '<option value="">Select who paid</option>';
                 splitByContainer.innerHTML = '';
                 
-                // 添加成員到 Paid by 下拉選單
-                group.members.forEach(member => {
-                    const option = document.createElement('option');
-                    option.value = member.id;
-                    option.textContent = member.name;
-                    paidBySelect.appendChild(option);
-                });
+                if (isLocalMode) {
+                    // 本地模式：members 是物件陣列
+                    group.members.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member.id;
+                        option.textContent = member.name;
+                        paidBySelect.appendChild(option);
+                    });
+                    this.renderSplitOptions(group.members);
+                } else {
+                    // Firebase 模式：members 是 UID 陣列
+                    const memberData = await this.getMemberData(group.members);
+                    memberData.forEach(member => {
+                        const option = document.createElement('option');
+                        option.value = member.id;
+                        option.textContent = member.name;
+                        paidBySelect.appendChild(option);
+                    });
+                    this.renderSplitOptions(memberData);
+                }
                 
-                // 創建 Split by 選項
-                group.members.forEach(member => {
+                // 綁定分錢模式切換事件
+                this.bindSplitModeEvents();
+            }
+            
+            renderSplitOptions(members) {
+                const splitByContainer = document.getElementById('splitByContainer');
+                const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
+                
+                splitByContainer.innerHTML = '';
+                
+                members.forEach(member => {
                     const splitItem = document.createElement('div');
                     splitItem.className = 'split-item';
-                    splitItem.innerHTML = `
-                        <label class="split-label">
-                            <input type="checkbox" class="split-checkbox" value="${member.id}" checked>
-                            <span class="split-custom"></span>
-                            ${member.name}
-                        </label>
-                    `;
+                    
+                    if (splitMode === 'equal') {
+                        // 平分模式
+                        splitItem.innerHTML = `
+                            <label class="split-label">
+                                <input type="checkbox" class="split-checkbox" value="${member.id}" checked>
+                                <span class="split-custom"></span>
+                                ${member.name}
+                            </label>
+                        `;
+                    } else {
+                        // 自訂金額模式
+                        splitItem.innerHTML = `
+                            <label class="split-label">
+                                <input type="checkbox" class="split-checkbox" value="${member.id}" checked>
+                                <span class="split-custom"></span>
+                                ${member.name}
+                            </label>
+                            <input type="number" class="split-amount-input" placeholder="0.00" step="0.01" min="0" data-member-id="${member.id}">
+                        `;
+                    }
+                    
                     splitByContainer.appendChild(splitItem);
                 });
             }
             
+            bindSplitModeEvents() {
+                const splitModeRadios = document.querySelectorAll('input[name="splitMode"]');
+                splitModeRadios.forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        if (!this.currentGroupId) return;
+                        const group = this.groups.find(g => g.id === this.currentGroupId);
+                        this.renderSplitOptions(group.members);
+                    });
+                });
+            }
+            
             getSplitByMembers() {
+                const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
                 const checkboxes = document.querySelectorAll('.split-checkbox:checked');
-                return Array.from(checkboxes).map(checkbox => checkbox.value);
+                
+                if (splitMode === 'equal') {
+                    // 平分模式：返回選中的成員ID
+                    return Array.from(checkboxes).map(checkbox => checkbox.value);
+                } else {
+                    // 自訂金額模式：返回選中成員的ID和金額
+                    const splitData = [];
+                    checkboxes.forEach(checkbox => {
+                        const memberId = checkbox.value;
+                        const amountInput = document.querySelector(`.split-amount-input[data-member-id="${memberId}"]`);
+                        const amount = parseFloat(amountInput.value) || 0;
+                        
+                        if (amount > 0) {
+                            splitData.push({
+                                memberId: memberId,
+                                amount: amount
+                            });
+                        }
+                    });
+                    return splitData;
+                }
             }
             
             renderBalances() {
@@ -925,14 +1445,23 @@
                 
                 // 計算每筆交易對餘額的影響
                 group.expenses.forEach(expense => {
-                    const splitAmount = expense.amount / expense.splitBy.length;
-                    
-                    // 每個分錢的人需要付錢
-                    expense.splitBy.forEach(memberId => {
-                        if (memberBalances[memberId]) {
-                            memberBalances[memberId].balance -= splitAmount;
-                        }
-                    });
+                    // 檢查是否為新的自訂金額格式
+                    if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
+                        // 自訂金額模式
+                        expense.splitBy.forEach(splitItem => {
+                            if (memberBalances[splitItem.memberId]) {
+                                memberBalances[splitItem.memberId].balance -= splitItem.amount;
+                            }
+                        });
+                    } else {
+                        // 平分模式（向後兼容）
+                        const splitAmount = expense.amount / expense.splitBy.length;
+                        expense.splitBy.forEach(memberId => {
+                            if (memberBalances[memberId]) {
+                                memberBalances[memberId].balance -= splitAmount;
+                            }
+                        });
+                    }
                     
                     // 付錢的人收到錢
                     if (memberBalances[expense.paidBy]) {
