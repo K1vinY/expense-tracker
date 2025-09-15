@@ -222,27 +222,6 @@
                     </div>
                 </div>
 
-                <!-- Statistics -->
-            <div class="stats-container">
-                    <h3 class="section-title">📊 Statistics</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">📈</div>
-                            <div class="stat-label">Total Income</div>
-                        <div class="stat-value income" id="totalIncome">$0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📉</div>
-                            <div class="stat-label">Total Expense</div>
-                        <div class="stat-value expense" id="totalExpense">$0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">📅</div>
-                            <div class="stat-label">Records</div>
-                        <div class="stat-value" id="totalRecords">0</div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </section>
     </div>
@@ -732,23 +711,15 @@
             }
             
             createGroupCard(group) {
-                const totalIncome = group.expenses
-                    .filter(e => e.type === 'income')
-                    .reduce((sum, e) => sum + e.amount, 0);
-                
-                const totalExpense = group.expenses
-                    .filter(e => e.type === 'expense')
-                    .reduce((sum, e) => sum + Math.abs(e.amount), 0);
-                
-                const balance = totalIncome - totalExpense;
-                const balanceClass = balance >= 0 ? 'income' : 'expense';
+                // 計算總金額（所有交易的總和）
+                const totalAmount = group.expenses.reduce((sum, e) => sum + e.amount, 0);
                 const memberCount = group.members ? group.members.length : 0;
                 
                 return `
                     <div class="group-card" onclick="expenseTracker.showGroupDetail('${group.id}')">
                         <div class="group-icon">📁</div>
                         <div class="group-name">${group.name}</div>
-                        <div class="group-balance ${balanceClass}">$${balance.toFixed(2)}</div>
+                        <div class="group-balance">$${totalAmount.toFixed(2)}</div>
                         <div class="group-transactions">${group.expenses.length} transactions</div>
                         <div class="group-members">👥 ${memberCount} members</div>
                     </div>
@@ -804,24 +775,8 @@
                 const group = this.groups.find(g => g.id === this.currentGroupId);
                 const totalAmount = group.expenses.reduce((sum, e) => sum + e.amount, 0);
                 
-                // 計算每個成員的淨餘額
-                const memberBalances = {};
-                group.members.forEach(member => {
-                    memberBalances[member.id] = 0;
-                });
-                
-                group.expenses.forEach(expense => {
-                    const splitAmount = expense.amount / expense.splitBy.length;
-                    expense.splitBy.forEach(memberId => {
-                        memberBalances[memberId] -= splitAmount;
-                    });
-                    memberBalances[expense.paidBy] += expense.amount;
-                });
-                
+                // 只更新群組餘額顯示
                 document.getElementById('groupBalance').textContent = `$${totalAmount.toFixed(2)}`;
-                document.getElementById('totalIncome').textContent = `$${totalAmount.toFixed(2)}`;
-                document.getElementById('totalExpense').textContent = `$${totalAmount.toFixed(2)}`;
-                document.getElementById('totalRecords').textContent = group.expenses.length;
             }
             
             updateTotalBalance() {
