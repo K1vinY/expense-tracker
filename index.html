@@ -16,7 +16,8 @@
             <h1 class="title">💰 Pixel Expense Tracker</h1>
             <div class="auth-section" id="authSection">
                 <div class="user-info" id="userInfo" style="display: none;">
-                    <span id="userEmail"></span>
+                    <span id="userDisplayName"></span>
+                    <button id="userSettingsBtn" class="pixel-button secondary">⚙️ Settings</button>
                     <button id="logoutBtn" class="pixel-button secondary">Logout</button>
                 </div>
                 <div class="login-form" id="loginForm">
@@ -27,6 +28,104 @@
                 </div>
             </div>
         </header>
+
+        <!-- Registration Page (Hidden by default) -->
+        <section class="registration-section" id="registrationSection" style="display: none;">
+            <div class="registration-container">
+                <div class="registration-header">
+                    <h2 class="registration-title">📝 Create Account</h2>
+                    <button id="backToLogin" class="pixel-button secondary">← Back to Login</button>
+                </div>
+                
+                <form id="registrationForm" class="pixel-form">
+                    <div class="form-group">
+                        <label for="regEmail">Email Address:</label>
+                        <input type="email" id="regEmail" placeholder="Enter your email" required class="pixel-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regName">Display Name:</label>
+                        <input type="text" id="regName" placeholder="Enter your name" required class="pixel-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regPassword">Password:</label>
+                        <input type="password" id="regPassword" placeholder="Enter password (min 6 characters)" required minlength="6" class="pixel-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="regConfirmPassword">Confirm Password:</label>
+                        <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required minlength="6" class="pixel-input">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="pixel-button primary">Create Account</button>
+                        <button type="button" id="cancelRegistration" class="pixel-button secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- User Settings Page (Hidden by default) -->
+        <section class="user-settings-section" id="userSettingsSection" style="display: none;">
+            <div class="user-settings-container">
+                <div class="user-settings-header">
+                    <h2 class="user-settings-title">⚙️ User Settings</h2>
+                    <button id="backFromUserSettings" class="pixel-button secondary">← Back</button>
+                </div>
+                
+                <form id="userSettingsForm" class="pixel-form">
+                    <div class="form-group">
+                        <label for="settingsEmail">Email Address:</label>
+                        <input type="email" id="settingsEmail" readonly class="pixel-input readonly">
+                        <small class="form-help">Email cannot be changed</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="settingsName">Display Name:</label>
+                        <input type="text" id="settingsName" placeholder="Enter your name" required class="pixel-input">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="pixel-button primary">💾 Save Changes</button>
+                        <button type="button" id="resetPasswordBtn" class="pixel-button secondary">🔒 Reset Password</button>
+                        <button type="button" id="cancelUserSettings" class="pixel-button secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Reset Password Page (Hidden by default) -->
+        <section class="reset-password-section" id="resetPasswordSection" style="display: none;">
+            <div class="reset-password-container">
+                <div class="reset-password-header">
+                    <h2 class="reset-password-title">🔒 Reset Password</h2>
+                    <button id="backFromResetPassword" class="pixel-button secondary">← Back to Settings</button>
+                </div>
+                
+                <form id="resetPasswordForm" class="pixel-form">
+                    <div class="form-group">
+                        <label for="resetCurrentPassword">Current Password:</label>
+                        <input type="password" id="resetCurrentPassword" placeholder="Enter current password" required class="pixel-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resetNewPassword">New Password:</label>
+                        <input type="password" id="resetNewPassword" placeholder="Enter new password (min 6 characters)" required minlength="6" class="pixel-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resetConfirmPassword">Confirm New Password:</label>
+                        <input type="password" id="resetConfirmPassword" placeholder="Confirm new password" required minlength="6" class="pixel-input">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="pixel-button primary">🔒 Update Password</button>
+                        <button type="button" id="cancelResetPassword" class="pixel-button secondary">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </section>
 
         <!-- Groups Overview Section -->
         <section class="groups-section">
@@ -57,7 +156,7 @@
                 </div>
 
                 <!-- Add Member Form -->
-                <div class="form-container">
+            <div class="form-container">
                     <h3 class="section-title">👥 Add New Member</h3>
                     <form id="addMemberForm" class="pixel-form">
                         <div class="form-group">
@@ -162,18 +261,18 @@
                 <!-- Expense Form -->
                 <div class="form-container">
                     <h3 class="section-title">📝 Add Transaction</h3>
-                    <form id="expenseForm" class="pixel-form">
-                        <div class="form-group">
+                <form id="expenseForm" class="pixel-form">
+                    <div class="form-group">
                             <label for="description">Description:</label>
                             <input type="text" id="description" placeholder="e.g. Lunch" required>
-                        </div>
-                        
-                        <div class="form-group">
+                    </div>
+                    
+                    <div class="form-group">
                             <label for="amount">Amount:</label>
-                            <input type="number" id="amount" placeholder="0" step="0.01" required>
-                        </div>
-                        
-                        <div class="form-group">
+                        <input type="number" id="amount" placeholder="0" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
                             <label for="transactionDate">Date & Time:</label>
                             <input type="datetime-local" id="transactionDate" required>
                         </div>
@@ -182,10 +281,10 @@
                             <label for="paidBy">Paid by:</label>
                             <select id="paidBy" required>
                                 <option value="">Select who paid</option>
-                    </select>
-                        </div>
-                        
-                        <div class="form-group">
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
                             <label for="splitBy">Split by:</label>
                             <div class="split-options">
                                 <div class="split-mode-selector">
@@ -193,33 +292,33 @@
                                         <input type="radio" name="splitMode" value="equal" checked>
                                         <span class="split-mode-custom"></span>
                                         Equal Split
-                                    </label>
+                            </label>
                                     <label class="split-mode-option">
                                         <input type="radio" name="splitMode" value="custom">
                                         <span class="split-mode-custom"></span>
                                         Custom Amount
-                                    </label>
+                            </label>
                                 </div>
                                 <div id="splitByContainer" class="split-container">
                                     <!-- Split options will be dynamically inserted here -->
                                 </div>
-                            </div>
                         </div>
-                        
-                        <button type="submit" class="pixel-button primary">💾 Save</button>
-                    </form>
                     </div>
+                    
+                        <button type="submit" class="pixel-button primary">💾 Save</button>
+                </form>
+            </div>
 
                 <!-- Transaction List -->
-                <div class="list-container">
+            <div class="list-container">
                     <h3 class="section-title">📋 Transactions</h3>
-                    <div class="filter-controls">
+                <div class="filter-controls">
                         <button id="clearAll" class="pixel-button danger">🗑️ Clear All</button>
-                    </div>
+                </div>
                 <div id="expenseList" class="expense-list">
                         <!-- Transaction items will be dynamically inserted here -->
-                    </div>
                 </div>
+            </div>
 
             </div>
         </section>
@@ -277,11 +376,15 @@
                 console.log('Cleared old local data');
                 
                 // 監聽身份驗證狀態變化
-                auth.onAuthStateChanged((user) => {
+                auth.onAuthStateChanged(async (user) => {
                     if (user) {
                         // 用戶已登入
                         currentUser = user;
                         console.log('User signed in:', user.email);
+                        
+                        // 確保用戶文檔存在
+                        await this.ensureUserDocument(user);
+                        
                         this.showUserInfo();
                         this.loadGroups();
                     } else {
@@ -298,12 +401,81 @@
             showUserInfo() {
                 document.getElementById('userInfo').style.display = 'flex';
                 document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('registrationSection').style.display = 'none';
+                document.getElementById('userSettingsSection').style.display = 'none';
+                document.getElementById('resetPasswordSection').style.display = 'none';
+                document.getElementById('userDisplayName').textContent = currentUser.displayName || currentUser.email.split('@')[0];
+                
+                // 確保回到主頁面
+                document.querySelector('.groups-section').style.display = 'block';
+                document.querySelector('.group-detail-section').style.display = 'none';
+                document.querySelector('.group-members-section').style.display = 'none';
+                document.querySelector('.group-settings-section').style.display = 'none';
+                document.querySelector('.group-balances-section').style.display = 'none';
+                
+                // 重新載入群組數據
+                this.loadGroups();
             }
             
             showLoginForm() {
                 document.getElementById('userInfo').style.display = 'none';
                 document.getElementById('loginForm').style.display = 'flex';
+                document.getElementById('registrationSection').style.display = 'none';
+            }
+            
+            showRegistrationForm() {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registrationSection').style.display = 'block';
+                document.getElementById('userSettingsSection').style.display = 'none';
+            }
+            
+            showUserSettings() {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registrationSection').style.display = 'none';
+                document.getElementById('userSettingsSection').style.display = 'block';
+                document.getElementById('resetPasswordSection').style.display = 'none';
+                this.loadUserSettings();
+            }
+            
+            showResetPassword() {
+                document.getElementById('userSettingsSection').style.display = 'none';
+                document.getElementById('resetPasswordSection').style.display = 'block';
+            }
+            
+            loadUserSettings() {
+                if (!currentUser) return;
+                
+                document.getElementById('settingsEmail').value = currentUser.email;
+                document.getElementById('settingsName').value = currentUser.displayName || currentUser.email.split('@')[0];
+            }
+            
+            async ensureUserDocument(user) {
+                try {
+                    // 檢查用戶文檔是否存在
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    
+                    if (!userDoc.exists) {
+                        // 如果文檔不存在，創建它
+                        await db.collection('users').doc(user.uid).set({
+                            email: user.email,
+                            displayName: user.displayName || user.email.split('@')[0],
+                            createdAt: new Date().toISOString(),
+                            lastLoginAt: new Date().toISOString()
+                        });
+                        console.log('User document created for:', user.email);
+                    } else {
+                        // 如果文檔存在，更新 lastLoginAt
+                        await db.collection('users').doc(user.uid).update({
+                            lastLoginAt: new Date().toISOString()
+                        });
+                        console.log('User document updated for:', user.email);
+                    }
+                } catch (error) {
+                    console.error('Error ensuring user document:', error);
+                    // 不阻止登入流程，只是記錄錯誤
+                }
             }
             
             async login() {
@@ -325,11 +497,18 @@
             }
             
             async register() {
-                const email = document.getElementById('emailInput').value;
-                const password = document.getElementById('passwordInput').value;
+                const email = document.getElementById('regEmail').value;
+                const name = document.getElementById('regName').value;
+                const password = document.getElementById('regPassword').value;
+                const confirmPassword = document.getElementById('regConfirmPassword').value;
                 
-                if (!email || !password) {
-                    alert('Please enter both email and password');
+                if (!email || !name || !password || !confirmPassword) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match');
                     return;
                 }
                 
@@ -342,18 +521,24 @@
                     const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                     const user = userCredential.user;
                     
+                    // 更新用戶的顯示名稱
+                    await user.updateProfile({
+                        displayName: name
+                    });
+                    
                     // 創建用戶資料文檔
                     await db.collection('users').doc(user.uid).set({
                         email: email,
-                        displayName: email.split('@')[0], // 使用 email 前綴作為顯示名稱
+                        displayName: name,
                         createdAt: new Date().toISOString(),
                         lastLoginAt: new Date().toISOString()
-                    });
+                    }, { merge: true });
                     
                     // 檢查是否有待處理的邀請
                     await this.checkPendingInvitations(user.uid, email);
                     
                     console.log('Registration successful');
+                    alert('Account created successfully!');
                 } catch (error) {
                     console.error('Registration error:', error);
                     alert('Registration failed: ' + error.message);
@@ -426,7 +611,104 @@
                 }
             }
             
+            async updateUserSettings() {
+                if (!currentUser) return;
+                
+                const newName = document.getElementById('settingsName').value;
+                
+                if (!newName) {
+                    alert('Please enter a display name');
+                    return;
+                }
+                
+                try {
+                    // 更新顯示名稱
+                    if (newName !== currentUser.displayName) {
+                        await currentUser.updateProfile({
+                            displayName: newName
+                        });
+                        
+                        // 更新 Firestore 中的用戶資料（使用 set 方法，如果文檔不存在會創建）
+                        await db.collection('users').doc(currentUser.uid).set({
+                            email: currentUser.email,
+                            displayName: newName,
+                            createdAt: new Date().toISOString(),
+                            lastLoginAt: new Date().toISOString()
+                        }, { merge: true }); // merge: true 表示如果文檔存在就更新，不存在就創建
+                        
+                        console.log('Display name updated');
+                    }
+                    
+                    // 更新本地顯示
+                    this.showUserInfo();
+                    
+                    alert('Settings updated successfully!');
+                    
+                } catch (error) {
+                    console.error('Error updating settings:', error);
+                    alert('Failed to update settings: ' + error.message);
+                }
+            }
+            
+            async resetPassword() {
+                if (!currentUser) return;
+                
+                const currentPassword = document.getElementById('resetCurrentPassword').value;
+                const newPassword = document.getElementById('resetNewPassword').value;
+                const confirmPassword = document.getElementById('resetConfirmPassword').value;
+                
+                if (!currentPassword || !newPassword || !confirmPassword) {
+                    alert('Please fill in all password fields');
+                    return;
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    alert('New passwords do not match');
+                    return;
+                }
+                
+                if (newPassword.length < 6) {
+                    alert('New password must be at least 6 characters');
+                    return;
+                }
+                
+                try {
+                    // 重新認證用戶
+                    const credential = firebase.auth.EmailAuthProvider.credential(
+                        currentUser.email, 
+                        currentPassword
+                    );
+                    await currentUser.reauthenticateWithCredential(credential);
+                    
+                    // 更新密碼
+                    await currentUser.updatePassword(newPassword);
+                    console.log('Password updated');
+                    
+                    alert('Password updated successfully!');
+                    
+                    // 清空表單並返回設定頁面
+                    document.getElementById('resetCurrentPassword').value = '';
+                    document.getElementById('resetNewPassword').value = '';
+                    document.getElementById('resetConfirmPassword').value = '';
+                    this.showUserSettings();
+                    
+                } catch (error) {
+                    console.error('Error updating password:', error);
+                    if (error.code === 'auth/wrong-password') {
+                        alert('Current password is incorrect');
+                    } else if (error.code === 'auth/weak-password') {
+                        alert('New password is too weak');
+                    } else {
+                        alert('Failed to update password: ' + error.message);
+                    }
+                }
+            }
+            
             async loadGroups() {
+                console.log('loadGroups called, isLocalMode:', isLocalMode);
+                console.log('currentUser:', currentUser);
+                console.log('db:', db);
+                
                 if (isLocalMode) {
                     // 本地模式
                     console.log('Loading groups from localStorage');
@@ -458,6 +740,9 @@
                         const snapshot = await db.collection('groups')
                             .where('members', 'array-contains', currentUser.uid)
                             .get();
+                        
+                        console.log('User-specific query result:', snapshot.docs.length, 'documents');
+                        console.log('Query docs:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
                         
                         this.groups = snapshot.docs.map(doc => ({
                             id: doc.id,
@@ -499,11 +784,61 @@
                 });
                 
                 document.getElementById('registerBtn').addEventListener('click', () => {
-                    this.register();
+                    this.showRegistrationForm();
                 });
                 
                 document.getElementById('logoutBtn').addEventListener('click', () => {
                     this.logout();
+                });
+                
+                document.getElementById('userSettingsBtn').addEventListener('click', () => {
+                    this.showUserSettings();
+                });
+                
+                // Registration events
+                document.getElementById('registrationForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.register();
+                });
+                
+                document.getElementById('backToLogin').addEventListener('click', () => {
+                    this.showLoginForm();
+                });
+                
+                document.getElementById('cancelRegistration').addEventListener('click', () => {
+                    this.showLoginForm();
+                });
+                
+                // User settings events
+                document.getElementById('userSettingsForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.updateUserSettings();
+                });
+                
+                document.getElementById('resetPasswordBtn').addEventListener('click', () => {
+                    this.showResetPassword();
+                });
+                
+                document.getElementById('backFromUserSettings').addEventListener('click', () => {
+                    this.showUserInfo();
+                });
+                
+                document.getElementById('cancelUserSettings').addEventListener('click', () => {
+                    this.showUserInfo();
+                });
+                
+                // Reset password events
+                document.getElementById('resetPasswordForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.resetPassword();
+                });
+                
+                document.getElementById('backFromResetPassword').addEventListener('click', () => {
+                    this.showUserSettings();
+                });
+                
+                document.getElementById('cancelResetPassword').addEventListener('click', () => {
+                    this.showUserSettings();
                 });
                 
                 // Group management
@@ -660,10 +995,10 @@
                 
                 document.getElementById('membersGroupTitle').textContent = `${group.name} - Members`;
                 document.getElementById('memberCount').textContent = `${group.members.length} members`;
-                document.getElementById('groupMembersSection').style.display = 'block';
+                document.querySelector('.group-members-section').style.display = 'block';
                 document.querySelector('.groups-section').style.display = 'none';
-                document.getElementById('groupDetailSection').style.display = 'none';
-                document.getElementById('groupSettingsSection').style.display = 'none';
+                document.querySelector('.group-detail-section').style.display = 'none';
+                document.querySelector('.group-settings-section').style.display = 'none';
                 
                 this.renderMembers();
             }
@@ -673,11 +1008,11 @@
                 const group = this.groups.find(g => g.id === groupId);
                 
                 document.getElementById('groupTitle').textContent = `${group.name} - Transactions`;
-                document.getElementById('groupDetailSection').style.display = 'block';
+                document.querySelector('.group-detail-section').style.display = 'block';
                 document.querySelector('.groups-section').style.display = 'none';
-                document.getElementById('groupMembersSection').style.display = 'none';
-                document.getElementById('groupSettingsSection').style.display = 'none';
-                document.getElementById('groupBalancesSection').style.display = 'none';
+                document.querySelector('.group-members-section').style.display = 'none';
+                document.querySelector('.group-settings-section').style.display = 'none';
+                document.querySelector('.group-balances-section').style.display = 'none';
                 
                 this.loadGroupMembers();
                 this.renderExpenses();
@@ -690,35 +1025,35 @@
                 const group = this.groups.find(g => g.id === groupId);
                 
                 document.getElementById('settingsGroupTitle').textContent = `${group.name} - Settings`;
-                document.getElementById('groupSettingsSection').style.display = 'block';
+                document.querySelector('.group-settings-section').style.display = 'block';
                 document.querySelector('.groups-section').style.display = 'none';
-                document.getElementById('groupDetailSection').style.display = 'none';
-                document.getElementById('groupMembersSection').style.display = 'none';
+                document.querySelector('.group-detail-section').style.display = 'none';
+                document.querySelector('.group-members-section').style.display = 'none';
                 
                 // 載入群組資訊到表單
                 document.getElementById('groupNameEdit').value = group.name;
                 document.getElementById('groupDescription').value = group.description || '';
             }
             
-            showGroupBalances(groupId) {
+            async showGroupBalances(groupId) {
                 this.currentGroupId = groupId;
                 const group = this.groups.find(g => g.id === groupId);
                 
                 document.getElementById('balancesGroupTitle').textContent = `${group.name} - Balances`;
-                document.getElementById('groupBalancesSection').style.display = 'block';
+                document.querySelector('.group-balances-section').style.display = 'block';
                 document.querySelector('.groups-section').style.display = 'none';
-                document.getElementById('groupDetailSection').style.display = 'none';
-                document.getElementById('groupMembersSection').style.display = 'none';
-                document.getElementById('groupSettingsSection').style.display = 'none';
+                document.querySelector('.group-detail-section').style.display = 'none';
+                document.querySelector('.group-members-section').style.display = 'none';
+                document.querySelector('.group-settings-section').style.display = 'none';
                 
-                this.renderBalances();
+                await this.renderBalances();
             }
             
             showGroupsView() {
-                document.getElementById('groupDetailSection').style.display = 'none';
-                document.getElementById('groupMembersSection').style.display = 'none';
-                document.getElementById('groupSettingsSection').style.display = 'none';
-                document.getElementById('groupBalancesSection').style.display = 'none';
+                document.querySelector('.group-detail-section').style.display = 'none';
+                document.querySelector('.group-members-section').style.display = 'none';
+                document.querySelector('.group-settings-section').style.display = 'none';
+                document.querySelector('.group-balances-section').style.display = 'none';
                 document.querySelector('.groups-section').style.display = 'block';
                 this.currentGroupId = null;
                 this.updateTotalBalance();
@@ -777,10 +1112,10 @@
                     const group = this.groups.find(g => g.id === this.currentGroupId);
                     group.expenses.push(expense);
                     this.saveGroups();
-                    this.renderExpenses();
+                this.renderExpenses();
                     this.updateGroupStats();
                     this.updateTotalBalance();
-                    this.resetForm();
+                this.resetForm();
                     console.log('Expense added successfully');
                 } else {
                     // Firebase 模式
@@ -816,7 +1151,7 @@
                     // 本地模式
                     group.expenses = group.expenses.filter(expense => expense.timestamp !== timestamp);
                     this.saveGroups();
-                    this.renderExpenses();
+                this.renderExpenses();
                     this.updateGroupStats();
                     this.updateTotalBalance();
                 } else {
@@ -1005,7 +1340,7 @@
                         if (uid === currentUser.uid) {
                             return {
                                 id: uid,
-                                name: currentUser.email.split('@')[0],
+                                name: currentUser.displayName || currentUser.email.split('@')[0],
                                 role: 'admin',
                                 joinedAt: new Date().toISOString()
                             };
@@ -1257,7 +1592,7 @@
                                 <div class="expense-paid-by">💰 Paid by: ${paidByName}</div>
                                 <div class="expense-split-by">👥 Split by: ${splitByText}</div>
                                 <div class="expense-date">📅 ${date.toLocaleDateString('en-US')} ${date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
-                            </div>
+                        </div>
                         </div>
                         <div class="expense-amount">
                             $${expense.amount.toFixed(2)}
@@ -1404,11 +1739,11 @@
                 }
             }
             
-            renderBalances() {
+            async renderBalances() {
                 if (!this.currentGroupId) return;
                 
                 const group = this.groups.find(g => g.id === this.currentGroupId);
-                const balances = this.calculateMemberBalances(group);
+                const balances = await this.calculateMemberBalances(group);
                 const list = document.getElementById('balancesList');
                 const summary = document.getElementById('balancesSummary');
                 const settlementContainer = document.getElementById('settlementContainer');
@@ -1431,17 +1766,31 @@
                 list.innerHTML = balances.map(balance => this.createBalanceItem(balance)).join('');
             }
             
-            calculateMemberBalances(group) {
+            async calculateMemberBalances(group) {
                 const memberBalances = {};
                 
                 // 初始化所有成員的餘額為 0
-                group.members.forEach(member => {
-                    memberBalances[member.id] = {
-                        id: member.id,
-                        name: member.name,
-                        balance: 0
-                    };
-                });
+                if (isLocalMode) {
+                    // 本地模式：members 是對象數組
+                    group.members.forEach(member => {
+                        memberBalances[member.id] = {
+                            id: member.id,
+                            name: member.name,
+                            balance: 0
+                        };
+                    });
+                } else {
+                    // Firebase 模式：members 是 UID 數組，需要獲取用戶數據
+                    const memberData = await this.getMemberData(group.members);
+                    group.members.forEach(memberUid => {
+                        const memberInfo = memberData.find(m => m.id === memberUid);
+                        memberBalances[memberUid] = {
+                            id: memberUid,
+                            name: memberInfo ? memberInfo.name : 'Unknown User',
+                            balance: 0
+                        };
+                    });
+                }
                 
                 // 計算每筆交易對餘額的影響
                 group.expenses.forEach(expense => {
