@@ -35,7 +35,7 @@
         <section class="group-members-section" id="groupMembersSection" style="display: none;">
             <div class="group-members-container">
                 <div class="group-header">
-                    <button id="backFromMembers" class="pixel-button secondary">← Back to Transactions</button>
+                    <button id="backFromMembers" class="pixel-button secondary">← Back</button>
                     <h2 class="group-title" id="membersGroupTitle">Group Members</h2>
                     <div class="member-count" id="memberCount">0 members</div>
                 </div>
@@ -75,7 +75,7 @@
         <section class="group-settings-section" id="groupSettingsSection" style="display: none;">
             <div class="group-settings-container">
                 <div class="group-header">
-                    <button id="backFromSettings" class="pixel-button secondary">← Back to Transactions</button>
+                    <button id="backFromSettings" class="pixel-button secondary">← Back</button>
                     <h2 class="group-title" id="settingsGroupTitle">Group Settings</h2>
                     <div class="settings-status" id="settingsStatus">Active</div>
                 </div>
@@ -159,6 +159,30 @@
             </div>
         </section>
 
+        <!-- Group Balances Section (Hidden by default) -->
+        <section class="group-balances-section" id="groupBalancesSection" style="display: none;">
+            <div class="group-balances-container">
+                <div class="group-header">
+                    <button id="backFromBalances" class="pixel-button secondary">← Back</button>
+                    <h2 class="group-title" id="balancesGroupTitle">Group Balances</h2>
+                    <div class="balances-summary" id="balancesSummary">All settled up!</div>
+                </div>
+
+                <!-- Balances List -->
+                <div class="balances-list" id="balancesList">
+                    <!-- Balance items will be dynamically inserted here -->
+                </div>
+
+                <!-- Settlement Suggestions -->
+                <div class="settlement-container" id="settlementContainer" style="display: none;">
+                    <h3 class="section-title">💡 Settlement Suggestions</h3>
+                    <div id="settlementSuggestions" class="settlement-suggestions">
+                        <!-- Settlement suggestions will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Group Detail Section (Hidden by default) -->
         <section class="group-detail-section" id="groupDetailSection" style="display: none;">
             <div class="group-detail-container">
@@ -170,6 +194,7 @@
 
                 <!-- Group Actions -->
                 <div class="group-actions">
+                    <button id="viewBalances" class="pixel-button secondary">💰 View Balances</button>
                     <button id="manageMembers" class="pixel-button secondary">👥 Manage Members</button>
                     <button id="groupSettings" class="pixel-button secondary">⚙️ Settings</button>
                 </div>
@@ -209,14 +234,14 @@
                         
                         <button type="submit" class="pixel-button primary">💾 Save</button>
                     </form>
-                </div>
+                    </div>
 
                 <!-- Transaction List -->
                 <div class="list-container">
                     <h3 class="section-title">📋 Transactions</h3>
                     <div class="filter-controls">
                         <button id="clearAll" class="pixel-button danger">🗑️ Clear All</button>
-                </div>
+                    </div>
                 <div id="expenseList" class="expense-list">
                         <!-- Transaction items will be dynamically inserted here -->
                     </div>
@@ -303,6 +328,14 @@
                     this.showGroupSettings(this.currentGroupId);
                 });
                 
+                document.getElementById('viewBalances').addEventListener('click', () => {
+                    this.showGroupBalances(this.currentGroupId);
+                });
+                
+                document.getElementById('backFromBalances').addEventListener('click', () => {
+                    this.showGroupDetail(this.currentGroupId);
+                });
+                
                 document.getElementById('backFromSettings').addEventListener('click', () => {
                     this.showGroupDetail(this.currentGroupId);
                 });
@@ -382,6 +415,7 @@
                 document.querySelector('.groups-section').style.display = 'none';
                 document.getElementById('groupMembersSection').style.display = 'none';
                 document.getElementById('groupSettingsSection').style.display = 'none';
+                document.getElementById('groupBalancesSection').style.display = 'none';
                 
                 this.loadGroupMembers();
                 this.renderExpenses();
@@ -405,10 +439,25 @@
                 document.getElementById('invitePermission').value = group.invitePermission || 'admin';
             }
             
+            showGroupBalances(groupId) {
+                this.currentGroupId = groupId;
+                const group = this.groups.find(g => g.id === groupId);
+                
+                document.getElementById('balancesGroupTitle').textContent = `${group.name} - Balances`;
+                document.getElementById('groupBalancesSection').style.display = 'block';
+                document.querySelector('.groups-section').style.display = 'none';
+                document.getElementById('groupDetailSection').style.display = 'none';
+                document.getElementById('groupMembersSection').style.display = 'none';
+                document.getElementById('groupSettingsSection').style.display = 'none';
+                
+                this.renderBalances();
+            }
+            
             showGroupsView() {
                 document.getElementById('groupDetailSection').style.display = 'none';
                 document.getElementById('groupMembersSection').style.display = 'none';
                 document.getElementById('groupSettingsSection').style.display = 'none';
+                document.getElementById('groupBalancesSection').style.display = 'none';
                 document.querySelector('.groups-section').style.display = 'block';
                 this.currentGroupId = null;
                 this.updateTotalBalance();
@@ -473,10 +522,10 @@
                         const group = this.groups.find(g => g.id === this.currentGroupId);
                         group.expenses.push(expense);
                         
-                        this.renderExpenses();
+                this.renderExpenses();
                         this.updateGroupStats();
                         this.updateTotalBalance();
-                        this.resetForm();
+                this.resetForm();
                     } catch (error) {
                         console.error('Error adding expense:', error);
                         alert('Failed to add expense. Please try again.');
@@ -833,6 +882,153 @@
             getSplitByMembers() {
                 const checkboxes = document.querySelectorAll('.split-checkbox:checked');
                 return Array.from(checkboxes).map(checkbox => checkbox.value);
+            }
+            
+            renderBalances() {
+                if (!this.currentGroupId) return;
+                
+                const group = this.groups.find(g => g.id === this.currentGroupId);
+                const balances = this.calculateMemberBalances(group);
+                const list = document.getElementById('balancesList');
+                const summary = document.getElementById('balancesSummary');
+                const settlementContainer = document.getElementById('settlementContainer');
+                
+                
+                // 檢查是否所有人都結清了
+                const allSettled = balances.every(balance => Math.abs(balance.balance) < 0.01);
+                
+                if (allSettled) {
+                    summary.textContent = 'All settled up! ✓';
+                    summary.className = 'balances-summary settled';
+                    settlementContainer.style.display = 'none';
+                } else {
+                    summary.textContent = 'Some balances need to be settled';
+                    summary.className = 'balances-summary pending';
+                    settlementContainer.style.display = 'block';
+                    this.renderSettlementSuggestions(balances);
+                }
+                
+                list.innerHTML = balances.map(balance => this.createBalanceItem(balance)).join('');
+            }
+            
+            calculateMemberBalances(group) {
+                const memberBalances = {};
+                
+                // 初始化所有成員的餘額為 0
+                group.members.forEach(member => {
+                    memberBalances[member.id] = {
+                        id: member.id,
+                        name: member.name,
+                        balance: 0
+                    };
+                });
+                
+                // 計算每筆交易對餘額的影響
+                group.expenses.forEach(expense => {
+                    const splitAmount = expense.amount / expense.splitBy.length;
+                    
+                    // 每個分錢的人需要付錢
+                    expense.splitBy.forEach(memberId => {
+                        if (memberBalances[memberId]) {
+                            memberBalances[memberId].balance -= splitAmount;
+                        }
+                    });
+                    
+                    // 付錢的人收到錢
+                    if (memberBalances[expense.paidBy]) {
+                        memberBalances[expense.paidBy].balance += expense.amount;
+                    }
+                });
+                
+                // 轉換為陣列並排序（欠錢的在前，被欠錢的在後）
+                return Object.values(memberBalances).sort((a, b) => a.balance - b.balance);
+            }
+            
+            createBalanceItem(balance) {
+                const isOwed = balance.balance > 0.01;
+                const isOwing = balance.balance < -0.01;
+                const isSettled = Math.abs(balance.balance) < 0.01;
+                
+                let balanceClass = 'settled';
+                let balanceText = '$0 ✓';
+                let balanceBar = '';
+                
+                if (isOwed) {
+                    balanceClass = 'owed';
+                    balanceText = `+$${balance.balance.toFixed(2)}`;
+                    // 修復條形圖寬度計算，使用更合理的比例
+                    const maxAmount = 500; // 設定最大金額為500，超過這個數值就顯示100%寬度
+                    const barWidth = Math.min(Math.abs(balance.balance) / maxAmount, 1) * 100;
+                    balanceBar = `<div class="balance-bar owed" style="width: ${barWidth}%"></div>`;
+                } else if (isOwing) {
+                    balanceClass = 'owing';
+                    balanceText = `-$${Math.abs(balance.balance).toFixed(2)}`;
+                    // 修復條形圖寬度計算，使用更合理的比例
+                    const maxAmount = 500; // 設定最大金額為500，超過這個數值就顯示100%寬度
+                    const barWidth = Math.min(Math.abs(balance.balance) / maxAmount, 1) * 100;
+                    balanceBar = `<div class="balance-bar owing" style="width: ${barWidth}%"></div>`;
+                }
+                
+                return `
+                    <div class="balance-item">
+                        <div class="member-avatar">👤</div>
+                        <div class="member-name">${balance.name}</div>
+                        <div class="balance-display">
+                            ${balanceBar}
+                            <div class="balance-amount ${balanceClass}">${balanceText}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            renderSettlementSuggestions(balances) {
+                const suggestions = this.generateSettlementSuggestions(balances);
+                const container = document.getElementById('settlementSuggestions');
+                
+                if (suggestions.length === 0) {
+                    container.innerHTML = '<div class="no-suggestions">No settlement needed!</div>';
+                    return;
+                }
+                
+                container.innerHTML = suggestions.map(suggestion => `
+                    <div class="settlement-suggestion">
+                        <div class="suggestion-text">
+                            <strong>${suggestion.from}</strong> should pay <strong>${suggestion.to}</strong>
+                        </div>
+                        <div class="suggestion-amount">$${suggestion.amount.toFixed(2)}</div>
+                    </div>
+                `).join('');
+            }
+            
+            generateSettlementSuggestions(balances) {
+                const suggestions = [];
+                // 創建餘額的深拷貝，避免修改原始數據
+                const balancesCopy = balances.map(b => ({ ...b }));
+                const owing = balancesCopy.filter(b => b.balance < -0.01);
+                const owed = balancesCopy.filter(b => b.balance > 0.01);
+                
+                let owingIndex = 0;
+                let owedIndex = 0;
+                
+                while (owingIndex < owing.length && owedIndex < owed.length) {
+                    const owingAmount = Math.abs(owing[owingIndex].balance);
+                    const owedAmount = owed[owedIndex].balance;
+                    const settleAmount = Math.min(owingAmount, owedAmount);
+                    
+                    suggestions.push({
+                        from: owing[owingIndex].name,
+                        to: owed[owedIndex].name,
+                        amount: settleAmount
+                    });
+                    
+                    owing[owingIndex].balance += settleAmount;
+                    owed[owedIndex].balance -= settleAmount;
+                    
+                    if (Math.abs(owing[owingIndex].balance) < 0.01) owingIndex++;
+                    if (Math.abs(owed[owedIndex].balance) < 0.01) owedIndex++;
+                }
+                
+                return suggestions;
             }
         }
         
