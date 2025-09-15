@@ -62,29 +62,31 @@ class BalancesManager {
     
     async calculateMemberBalances(group) {
         const memberBalances = {};
-        
-        // 初始化所有成員的餘額為 0
-        if (this.isLocalMode) {
-            // 本地模式：members 是物件陣列
-            group.members.forEach(member => {
-                memberBalances[member.id] = {
-                    id: member.id,
-                    name: member.name,
-                    balance: 0
-                };
-            });
-        } else {
-            // Firebase 模式：members 是 UID 陣列，需要獲取用戶數據
-            const memberData = await this.getMemberData(group.members);
-            group.members.forEach(memberUid => {
-                const memberInfo = memberData.find(m => m.id === memberUid);
-                memberBalances[memberUid] = {
-                    id: memberUid,
-                    name: memberInfo ? memberInfo.name : 'Unknown User',
-                    balance: 0
-                };
-            });
-        }
+
+        // 蒐集所有在交易中出現過的參與者（包含已離開的成員與 pending email）
+        const participantIds = new Set();
+        // 現有成員
+        (group.members || []).forEach(uid => participantIds.add(uid));
+        // 待加入 email
+        (Array.isArray(group.pendingMembers) ? group.pendingMembers : []).forEach(email => participantIds.add(email));
+        // 掃描交易，加入 paidBy 與 splitBy
+        (group.expenses || []).forEach(expense => {
+            if (expense.paidBy) participantIds.add(expense.paidBy);
+            if (Array.isArray(expense.splitBy)) {
+                if (expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
+                    expense.splitBy.forEach(item => participantIds.add(item.memberId));
+                } else {
+                    expense.splitBy.forEach(id => participantIds.add(id));
+                }
+            }
+        });
+
+        // 解析顯示名稱（對 UID 查 users，對 email 直接使用 email），初始化餘額
+        const idArray = Array.from(participantIds);
+        const names = await Promise.all(idArray.map(id => this.resolveDisplayName(id)));
+        idArray.forEach((id, idx) => {
+            memberBalances[id] = { id, name: names[idx], balance: 0 };
+        });
         
         // 計算每筆交易對餘額的影響
         group.expenses.forEach(expense => {
@@ -92,28 +94,41 @@ class BalancesManager {
             if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
                 // 自訂金額模式
                 expense.splitBy.forEach(splitItem => {
-                    if (memberBalances[splitItem.memberId]) {
-                        memberBalances[splitItem.memberId].balance -= splitItem.amount;
-                    }
+                    memberBalances[splitItem.memberId].balance -= splitItem.amount;
                 });
             } else {
                 // 平分模式（向後兼容）
                 const splitAmount = expense.amount / expense.splitBy.length;
                 expense.splitBy.forEach(memberId => {
-                    if (memberBalances[memberId]) {
-                        memberBalances[memberId].balance -= splitAmount;
-                    }
+                    memberBalances[memberId].balance -= splitAmount;
                 });
             }
             
             // 付錢的人收到錢
-            if (memberBalances[expense.paidBy]) {
-                memberBalances[expense.paidBy].balance += expense.amount;
-            }
+            memberBalances[expense.paidBy].balance += expense.amount;
         });
         
         // 轉換為陣列並排序（欠錢的在前，被欠錢的在後）
         return Object.values(memberBalances).sort((a, b) => a.balance - b.balance);
+    }
+
+    // 根據 id 解析顯示名稱：email → 原字串；UID → 讀取 users.displayName 或 email 前綴
+    async resolveDisplayName(id) {
+        if (!id) return 'Unknown User';
+        if (typeof id === 'string' && id.includes('@')) return id; // pending email
+        try {
+            if (this.app.currentUser && id === this.app.currentUser.uid) {
+                return this.app.currentUser.displayName || this.app.currentUser.email.split('@')[0];
+            }
+            const userDoc = await this.db.collection('users').doc(id).get();
+            if (userDoc.exists) {
+                const data = userDoc.data();
+                return data.displayName || (data.email ? data.email.split('@')[0] : id.substring(0,8)+'...');
+            }
+        } catch (e) {
+            console.error('resolveDisplayName error for', id, e);
+        }
+        return id.substring(0,8)+'...';
     }
     
     async getMemberData(memberUids) {
@@ -131,36 +146,29 @@ class BalancesManager {
         }
         
         try {
+            const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+            const ownerUid = group ? group.createdBy : null;
             const memberPromises = memberUids.map(async (uid) => {
-                if (uid === currentUser.uid) {
-                    return {
-                        id: uid,
-                        name: currentUser.displayName || currentUser.email.split('@')[0],
-                        role: 'admin',
-                        joinedAt: new Date().toISOString()
-                    };
-                }
-                
+                // 名稱
+                let name = uid.substring(0, 8) + '...';
                 try {
-                    const userDoc = await this.db.collection('users').doc(uid).get();
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        return {
-                            id: uid,
-                            name: userData.displayName || userData.email.split('@')[0],
-                            role: 'member',
-                            joinedAt: userData.createdAt || new Date().toISOString()
-                        };
+                    if (currentUser && uid === currentUser.uid) {
+                        name = currentUser.displayName || currentUser.email.split('@')[0];
+                    } else {
+                        const userDoc = await this.db.collection('users').doc(uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            name = userData.displayName || userData.email.split('@')[0];
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching user data for UID:', uid, error);
                 }
                 
-                // 如果無法獲取用戶資料，使用 UID 作為名稱
                 return {
                     id: uid,
-                    name: uid.substring(0, 8) + '...',
-                    role: 'member',
+                    name,
+                    role: ownerUid && uid === ownerUid ? 'admin' : 'member',
                     joinedAt: new Date().toISOString()
                 };
             });
@@ -168,10 +176,12 @@ class BalancesManager {
             return await Promise.all(memberPromises);
         } catch (error) {
             console.error('Error getting member data:', error);
+            const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+            const ownerUid = group ? group.createdBy : null;
             return memberUids.map(uid => ({
                 id: uid,
                 name: uid.substring(0, 8) + '...',
-                role: 'member',
+                role: ownerUid && uid === ownerUid ? 'admin' : 'member',
                 joinedAt: new Date().toISOString()
             }));
         }

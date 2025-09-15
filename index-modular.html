@@ -106,7 +106,10 @@
                             </div>
                         </div>
                         
-                        <button type="submit" class="pixel-button primary">💾 Save</button>
+                        <div class="form-actions">
+                            <button type="submit" class="pixel-button primary">💾 Save</button>
+                            <button type="button" id="cancelEdit" class="pixel-button secondary" style="display: none;">Cancel</button>
+                        </div>
                     </form>
                 </div>
 
@@ -148,15 +151,6 @@
                             <label for="memberName">Member Email:</label>
                             <input type="email" id="memberName" placeholder="e.g. john@example.com" required>
                         </div>
-                        
-                        <div class="form-group">
-                            <label for="memberRole">Role:</label>
-                            <select id="memberRole">
-                                <option value="member">👤 Member</option>
-                                <option value="admin">👑 Admin</option>
-                            </select>
-                        </div>
-                        
                         <button type="submit" class="pixel-button primary">➕ Add Member</button>
                     </form>
                 </div>

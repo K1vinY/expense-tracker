@@ -43,18 +43,26 @@ class MembersManager {
         const list = document.getElementById('membersList');
         if (!list) return;
         
-        if (this.isLocalMode) {
-            // 本地模式：members 是物件陣列
-            list.innerHTML = group.members.map(member => this.createMemberItem(member)).join('');
-        } else {
-            // Firebase 模式：members 是 UID 陣列，需要獲取用戶數據
-            try {
-                const memberData = await this.getMemberData(group.members);
-                list.innerHTML = memberData.map(member => this.createMemberItem(member)).join('');
-            } catch (error) {
-                console.error('Error loading members:', error);
-                list.innerHTML = '<div class="error">Failed to load members</div>';
-            }
+        try {
+            // 現有成員
+            const activeMembers = this.isLocalMode
+                ? group.members
+                : await this.getMemberData(group.members);
+
+            // 待加入成員（以 email 表示）
+            const pendingEmails = Array.isArray(group.pendingMembers) ? group.pendingMembers : [];
+            const pendingMembers = pendingEmails.map(email => ({
+                id: email,
+                name: email,
+                role: 'pending',
+                joinedAt: null
+            }));
+
+            const allMembers = [...activeMembers, ...pendingMembers];
+            list.innerHTML = allMembers.map(member => this.createMemberItem(member)).join('');
+        } catch (error) {
+            console.error('Error loading members:', error);
+            list.innerHTML = '<div class="error">Failed to load members</div>';
         }
     }
     
@@ -62,47 +70,33 @@ class MembersManager {
         if (this.isLocalMode) return memberUids;
         
         const currentUser = this.app.currentUser;
-        if (!currentUser) {
-            console.error('No current user found in members manager');
-            return memberUids.map(uid => ({
-                id: uid,
-                name: uid.substring(0, 8) + '...',
-                role: 'member',
-                joinedAt: new Date().toISOString()
-            }));
-        }
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        const ownerUid = group ? group.createdBy : null;
         
         try {
             const memberPromises = memberUids.map(async (uid) => {
-                if (uid === currentUser.uid) {
-                    return {
-                        id: uid,
-                        name: currentUser.displayName || currentUser.email.split('@')[0],
-                        role: 'admin',
-                        joinedAt: new Date().toISOString()
-                    };
-                }
-                
+                // 讀取名稱
+                let name = uid.substring(0, 8) + '...';
                 try {
-                    const userDoc = await this.db.collection('users').doc(uid).get();
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        return {
-                            id: uid,
-                            name: userData.displayName || userData.email.split('@')[0],
-                            role: 'member',
-                            joinedAt: userData.createdAt || new Date().toISOString()
-                        };
+                    if (currentUser && uid === currentUser.uid) {
+                        name = currentUser.displayName || currentUser.email.split('@')[0];
+                    } else {
+                        const userDoc = await this.db.collection('users').doc(uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            name = userData.displayName || userData.email.split('@')[0];
+                        }
                     }
                 } catch (error) {
                     console.error('Error fetching user data for UID:', uid, error);
                 }
                 
-                // 如果無法獲取用戶資料，使用 UID 作為名稱
+                // 角色由群組建立者決定
+                const role = ownerUid && uid === ownerUid ? 'admin' : 'member';
                 return {
                     id: uid,
-                    name: uid.substring(0, 8) + '...',
-                    role: 'member',
+                    name,
+                    role,
                     joinedAt: new Date().toISOString()
                 };
             });
@@ -113,7 +107,7 @@ class MembersManager {
             return memberUids.map(uid => ({
                 id: uid,
                 name: uid.substring(0, 8) + '...',
-                role: 'member',
+                role: ownerUid && uid === ownerUid ? 'admin' : 'member',
                 joinedAt: new Date().toISOString()
             }));
         }
@@ -123,6 +117,9 @@ class MembersManager {
         const isAdmin = member.role === 'admin';
         const currentUser = this.app.currentUser;
         const isCurrentUser = currentUser && member.id === currentUser.uid;
+        const isPending = member.role === 'pending';
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        const isCurrentUserAdmin = group && group.createdBy === (currentUser ? currentUser.uid : '');
         
         return `
             <div class="member-item">
@@ -130,22 +127,28 @@ class MembersManager {
                     <div class="member-avatar">👤</div>
                     <div class="member-details">
                         <div class="member-name">${member.name}</div>
-                        <div class="member-role">${isAdmin ? 'Admin' : 'Member'}</div>
+                        <div class="member-role">${isPending ? 'Pending' : (isAdmin ? 'Admin' : 'Member')}</div>
                     </div>
                 </div>
                 <div class="member-actions">
-                    ${!isCurrentUser ? `
+                    ${isPending ? `
+                        <button class="pixel-button small danger" onclick="app.membersManager.removePendingMember('${member.id}')">
+                            Remove
+                        </button>
+                    ` : (isCurrentUserAdmin && !isCurrentUser ? `
                         <button class="pixel-button small danger" onclick="app.membersManager.removeMember('${member.id}')">
                             Remove
                         </button>
-                    ` : ''}
+                    ` : '')}
                 </div>
             </div>
         `;
     }
     
     async addMember() {
-        const email = document.getElementById('memberEmail').value.trim();
+        // 兼容不同欄位 ID（index-modular.html 使用 memberName 作為 Email 欄位）
+        const emailInput = document.getElementById('memberEmail') || document.getElementById('memberName');
+        const email = emailInput ? emailInput.value.trim() : '';
         if (!email) {
             alert('Please enter an email address');
             return;
@@ -199,11 +202,22 @@ class MembersManager {
                         status: 'pending',
                         createdAt: new Date().toISOString()
                     });
+
+                    // 將待加入成員寫入群組文件 pendingMembers 陣列
+                    await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                        pendingMembers: firebase.firestore.FieldValue.arrayUnion(email)
+                    });
+                    // 更新本地資料
+                    if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+                    if (!group.pendingMembers.includes(email)) group.pendingMembers.push(email);
+                    this.renderMembers();
                     
                     alert(`Invitation sent to ${email}. They will be added to the group when they register.`);
                 }
                 
-                document.getElementById('memberEmail').value = '';
+                // 清空輸入框（兼容 memberEmail / memberName）
+                const emailInputAfter = document.getElementById('memberEmail') || document.getElementById('memberName');
+                if (emailInputAfter) emailInputAfter.value = '';
             } catch (error) {
                 console.error('Error adding member:', error);
                 alert('Failed to add member: ' + error.message);
@@ -223,7 +237,9 @@ class MembersManager {
             this.updateMemberCount();
             this.renderMembers();
             
-            document.getElementById('memberEmail').value = '';
+            // 清空輸入框（兼容 memberEmail / memberName）
+            const emailInputAfter = document.getElementById('memberEmail') || document.getElementById('memberName');
+            if (emailInputAfter) emailInputAfter.value = '';
             alert('Member added successfully!');
         }
     }
@@ -233,7 +249,12 @@ class MembersManager {
             return;
         }
         
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        const currentUser = this.app.currentUser;
+        if (!currentUser || !group || group.createdBy !== currentUser.uid) {
+            alert('Only the group owner can remove members.');
+            return;
+        }
         if (!group) return;
         
         if (this.isLocalMode) {
@@ -247,7 +268,8 @@ class MembersManager {
                     members: firebase.firestore.FieldValue.arrayRemove(memberId)
                 });
                 
-                group.members = group.members.filter(memberId => memberId !== memberId);
+                // Firebase 模式下 members 為 UID 陣列
+                group.members = group.members.filter(uid => uid !== memberId);
             } catch (error) {
                 console.error('Error removing member:', error);
                 alert('Failed to remove member: ' + error.message);
@@ -256,12 +278,41 @@ class MembersManager {
         }
         
         this.updateMemberCount();
+        // 立即刷新群組列表與當前頁
+        if (this.app && this.app.groupsManager && this.app.groupsManager.loadGroups) {
+            await this.app.groupsManager.loadGroups();
+        }
         this.renderMembers();
         alert('Member removed successfully!');
     }
+
+    async removePendingMember(email) {
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        if (!group) return;
+        if (!confirm('Are you sure you want to remove this pending member?')) return;
+
+        if (this.isLocalMode) {
+            if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+            group.pendingMembers = group.pendingMembers.filter(e => e !== email);
+            this.saveGroups();
+        } else {
+            try {
+                await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                    pendingMembers: firebase.firestore.FieldValue.arrayRemove(email)
+                });
+                if (!Array.isArray(group.pendingMembers)) group.pendingMembers = [];
+                group.pendingMembers = group.pendingMembers.filter(e => e !== email);
+            } catch (error) {
+                console.error('Error removing pending member:', error);
+                alert('Failed to remove pending member: ' + error.message);
+                return;
+            }
+        }
+        this.renderMembers();
+    }
     
     updateMemberCount() {
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return;
         
         const memberCountElement = document.getElementById('memberCount');

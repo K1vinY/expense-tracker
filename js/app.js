@@ -74,9 +74,15 @@ class GroupExpenseTracker {
             } else {
                 this.currentUser = null;
                 console.log('User signed out');
+                // 清除登出後的狀態與畫面
+                this.clearSignedInViews();
                 this.showLoginForm();
+                this.currentGroupId = null;
                 this.groups = [];
-                this.groupsManager.renderGroups();
+                if (this.groupsManager) {
+                    this.groupsManager.groups = [];
+                    this.groupsManager.renderGroups();
+                }
             }
         });
     }
@@ -109,6 +115,47 @@ class GroupExpenseTracker {
         document.getElementById('loginForm').style.display = 'flex';
         document.getElementById('registrationSection').style.display = 'none';
         document.querySelector('.groups-section').style.display = 'none';
+        // 確保其他區塊也隱藏
+        const sectionsToHide = ['.group-detail-section', '.group-members-section', '.group-settings-section', '.group-balances-section'];
+        sectionsToHide.forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el) el.style.display = 'none';
+        });
+    }
+
+    // 登出或切換使用者時，清理登入後畫面殘留內容
+    clearSignedInViews() {
+        try {
+            // 隱藏所有群組相關區塊
+            ['.group-detail-section', '.group-members-section', '.group-settings-section', '.group-balances-section', '.groups-section']
+                .forEach(sel => {
+                    const el = document.querySelector(sel);
+                    if (el) el.style.display = 'none';
+                });
+
+            // 清空清單內容
+            const clearIds = ['expenseList', 'membersList', 'balancesList', 'settlementSuggestions'];
+            clearIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = '';
+            });
+
+            // 重設標題/摘要
+            const titleIds = ['groupTitle', 'membersGroupTitle', 'settingsGroupTitle', 'balancesGroupTitle', 'balancesSummary', 'memberCount'];
+            titleIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = '';
+            });
+
+            // 清除表單
+            const expenseForm = document.getElementById('expenseForm');
+            if (expenseForm) expenseForm.reset();
+
+            // 重置應用狀態
+            this.currentGroupId = null;
+        } catch (e) {
+            console.warn('clearSignedInViews warning:', e);
+        }
     }
     
     showRegistrationForm() {
@@ -223,11 +270,41 @@ class GroupExpenseTracker {
             e.preventDefault();
             this.expensesManager.addExpense();
         });
+        this.bindElement('cancelEdit', 'click', () => {
+            this.expensesManager.cancelEdit();
+        });
+        
+        // 清除所有費用事件
+        this.bindElement('clearAll', 'click', () => {
+            this.expensesManager.clearAllExpenses();
+        });
         
         // 成員管理事件
         this.bindElement('addMemberForm', 'submit', (e) => {
             e.preventDefault();
             this.membersManager.addMember();
+        });
+        
+        // 群組設定事件
+        this.bindElement('groupInfoForm', 'submit', (e) => {
+            e.preventDefault();
+            this.groupsManager.updateGroupInfo();
+        });
+        
+        // 危險操作事件
+        this.bindElement('deleteGroup', 'click', () => {
+            // 僅限群組擁有者（admin）可刪除
+            const group = this.groups.find(g => g.id === this.currentGroupId);
+            if (!group) return;
+            if (!this.currentUser || group.createdBy !== this.currentUser.uid) {
+                alert('Only the group owner can delete this group.');
+                return;
+            }
+            this.groupsManager.deleteGroup(this.currentGroupId);
+        });
+        
+        this.bindElement('leaveGroup', 'click', () => {
+            this.groupsManager.leaveGroup(this.currentGroupId);
         });
         
         // 清除表單事件 - 按鈕不存在，移除綁定

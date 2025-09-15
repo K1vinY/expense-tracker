@@ -254,9 +254,14 @@ class AuthManager {
             for (const invitation of invitations) {
                 // 將用戶添加到群組
                 await this.db.collection('groups').doc(invitation.groupId).update({
-                    members: firebase.firestore.FieldValue.arrayUnion(userUid)
+                    members: firebase.firestore.FieldValue.arrayUnion(userUid),
+                    // 接受後從待加入清單移除該 email，避免同人重複（email + UID）
+                    pendingMembers: firebase.firestore.FieldValue.arrayRemove(invitation.invitedEmail)
                 });
                 
+                // 將群組內既有交易中的 pending email 轉換成該用戶 UID
+                await this.migratePendingEmailToUid(invitation.groupId, invitation.invitedEmail, userUid);
+
                 // 更新邀請狀態
                 await this.db.collection('invitations').doc(invitation.id).update({
                     status: 'accepted',
@@ -265,10 +270,147 @@ class AuthManager {
             }
             
             alert(`Successfully joined ${invitations.length} group(s)!`);
-            this.app.loadGroups(); // 重新載入群組列表
+            // 重新載入群組列表
+            if (this.app && this.app.groupsManager) {
+                this.app.groupsManager.loadGroups();
+            }
         } catch (error) {
             console.error('Error accepting invitations:', error);
             alert('Failed to accept some invitations. Please try again.');
+        }
+    }
+
+    // 將既有交易紀錄裡的 email（pending 成員）替換成剛加入的 UID，避免 balances/transactions 重複顯示
+    async migratePendingEmailToUid(groupId, email, userUid) {
+        try {
+            const groupRef = this.db.collection('groups').doc(groupId);
+            const groupSnap = await groupRef.get();
+            if (!groupSnap.exists) return;
+
+            const data = groupSnap.data();
+            const expenses = Array.isArray(data.expenses) ? data.expenses : [];
+            let changed = false;
+
+            const migratedExpenses = expenses.map((exp) => {
+                let updated = { ...exp };
+                let modified = false;
+
+                // paidBy 若為 email，轉為 UID
+                if (updated.paidBy === email) {
+                    updated.paidBy = userUid;
+                    modified = true;
+                }
+
+                // splitBy 可能是 [id] 或 [{memberId, amount}]
+                if (Array.isArray(updated.splitBy)) {
+                    if (updated.splitBy.length > 0 && typeof updated.splitBy[0] === 'object') {
+                        const newSplit = updated.splitBy.map(item => (
+                            item.memberId === email ? { ...item, memberId: userUid } : item
+                        ));
+                        // 簡易差異檢查
+                        if (JSON.stringify(newSplit) !== JSON.stringify(updated.splitBy)) {
+                            updated.splitBy = newSplit;
+                            modified = true;
+                        }
+                    } else {
+                        const newSplit = updated.splitBy.map(id => id === email ? userUid : id);
+                        if (JSON.stringify(newSplit) !== JSON.stringify(updated.splitBy)) {
+                            updated.splitBy = newSplit;
+                            modified = true;
+                        }
+                    }
+                }
+
+                if (modified) changed = true;
+                return updated;
+            });
+
+            if (changed) {
+                await groupRef.update({ expenses: migratedExpenses });
+            }
+        } catch (error) {
+            console.error('migratePendingEmailToUid error:', error);
+        }
+    }
+
+    // 一次性修復：以群組名稱尋找群組，將該群組交易中的 email 轉為 UID，並從 pendingMembers 移除
+    async migrateGroupByName(groupName) {
+        try {
+            if (!this.app.currentUser) {
+                alert('Please login first.');
+                return;
+            }
+            const groupsSnap = await this.db.collection('groups')
+                .where('name', '==', groupName)
+                .get();
+            if (groupsSnap.empty) {
+                alert(`Group not found: ${groupName}`);
+                return;
+            }
+            // 若同名多個群組，全部遷移
+            for (const doc of groupsSnap.docs) {
+                const groupId = doc.id;
+                const data = doc.data();
+                const pendingEmails = Array.isArray(data.pendingMembers) ? data.pendingMembers : [];
+
+                // 建立 email -> uid 對照（僅對已存在的使用者）
+                const emailToUid = {};
+                for (const email of pendingEmails) {
+                    const uSnap = await this.db.collection('users').where('email', '==', email).limit(1).get();
+                    if (!uSnap.empty) {
+                        emailToUid[email] = uSnap.docs[0].id;
+                    }
+                }
+
+                let changed = false;
+                let expenses = Array.isArray(data.expenses) ? data.expenses : [];
+                const migratedExpenses = expenses.map(exp => {
+                    let updated = { ...exp };
+                    let modified = false;
+
+                    if (emailToUid[updated.paidBy]) {
+                        updated.paidBy = emailToUid[updated.paidBy];
+                        modified = true;
+                    }
+                    if (Array.isArray(updated.splitBy)) {
+                        if (updated.splitBy.length > 0 && typeof updated.splitBy[0] === 'object') {
+                            const newSplit = updated.splitBy.map(item => (
+                                emailToUid[item.memberId] ? { ...item, memberId: emailToUid[item.memberId] } : item
+                            ));
+                            if (JSON.stringify(newSplit) !== JSON.stringify(updated.splitBy)) {
+                                updated.splitBy = newSplit;
+                                modified = true;
+                            }
+                        } else {
+                            const newSplit = updated.splitBy.map(id => emailToUid[id] ? emailToUid[id] : id);
+                            if (JSON.stringify(newSplit) !== JSON.stringify(updated.splitBy)) {
+                                updated.splitBy = newSplit;
+                                modified = true;
+                            }
+                        }
+                    }
+
+                    if (modified) changed = true;
+                    return updated;
+                });
+
+                // 從 pendingMembers 移除已找到對應 UID 的 email
+                const remainingPending = pendingEmails.filter(email => !emailToUid[email]);
+
+                if (changed || remainingPending.length !== pendingEmails.length) {
+                    await this.db.collection('groups').doc(groupId).update({
+                        expenses: migratedExpenses,
+                        pendingMembers: remainingPending
+                    });
+                }
+            }
+            alert('Group migration completed. Please reopen the group.');
+            if (this.app && this.app.groupsManager) {
+                this.app.groupsManager.loadGroups();
+            }
+        } catch (e) {
+            console.error('migrateGroupByName error:', e);
+            alert('Migration failed: ' + e.message);
         }
     }
 }

@@ -7,6 +7,8 @@ class ExpensesManager {
         this.currentUser = app.currentUser;
         this.groups = app.groups;
         this.isLocalMode = app.isLocalMode;
+        this.editingTimestamp = null;
+        this.editingOriginal = null;
     }
     
     async addExpense() {
@@ -54,39 +56,79 @@ class ExpensesManager {
         
         console.log('New expense:', expense);
         
+        const isEditing = !!this.editingTimestamp;
+
         if (this.isLocalMode) {
             // 本地模式
-            const group = this.groups.find(g => g.id === this.app.currentGroupId);
+            const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
             if (group) {
-                group.expenses.push(expense);
+                if (isEditing) {
+                    const idx = group.expenses.findIndex(e => e.timestamp === this.editingTimestamp);
+                    if (idx !== -1) {
+                        // 保留原 timestamp 以利刪除/排序穩定
+                        expense.timestamp = this.editingTimestamp;
+                        group.expenses[idx] = expense;
+                    }
+                } else {
+                    group.expenses.push(expense);
+                }
                 this.saveGroups();
-                this.renderExpenses(group.expenses);
+                await this.renderExpenses(group.expenses);
                 this.updateGroupBalance();
-                this.resetForm();
+                await this.resetForm();
+                this.finishEditMode();
             }
         } else {
             // Firebase 模式
             try {
-                const group = this.groups.find(g => g.id === this.app.currentGroupId);
+                const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
                 if (!group) return;
                 
-                // 更新群組的費用列表
-                await this.db.collection('groups').doc(this.app.currentGroupId).update({
-                    expenses: firebase.firestore.FieldValue.arrayUnion(expense)
-                });
-                
-                // 更新本地數據
-                group.expenses.push(expense);
-                this.renderExpenses(group.expenses);
+                if (isEditing) {
+                    // 先移除舊的，再加入新的
+                    const old = group.expenses.find(e => e.timestamp === this.editingTimestamp);
+                    if (old) {
+                        await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                            expenses: firebase.firestore.FieldValue.arrayRemove(old)
+                        });
+                    }
+                    expense.timestamp = this.editingTimestamp;
+                    await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                        expenses: firebase.firestore.FieldValue.arrayUnion(expense)
+                    });
+                    const idx = group.expenses.findIndex(e => e.timestamp === this.editingTimestamp);
+                    if (idx !== -1) group.expenses[idx] = expense;
+                } else {
+                    await this.db.collection('groups').doc(this.app.currentGroupId).update({
+                        expenses: firebase.firestore.FieldValue.arrayUnion(expense)
+                    });
+                    group.expenses.push(expense);
+                }
+                await this.renderExpenses(group.expenses);
                 this.updateGroupBalance();
-                this.resetForm();
+                await this.resetForm();
                 
                 console.log('Expense added successfully');
+                this.finishEditMode();
             } catch (error) {
                 console.error('Error adding expense:', error);
                 alert('Failed to add expense: ' + error.message);
             }
         }
+    }
+
+    finishEditMode() {
+        this.editingTimestamp = null;
+        this.editingOriginal = null;
+        const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Save';
+        const cancelBtn = document.getElementById('cancelEdit');
+        if (cancelBtn) cancelBtn.style.display = 'none';
+    }
+
+    cancelEdit() {
+        this.resetForm();
+        this.finishEditMode();
     }
     
     getSplitByData() {
@@ -120,7 +162,7 @@ class ExpensesManager {
             return;
         }
         
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return;
         
         const expenseToDelete = group.expenses.find(expense => expense.timestamp === parseInt(timestamp));
@@ -147,16 +189,16 @@ class ExpensesManager {
             }
         }
         
-        this.renderExpenses(group.expenses);
+        await this.renderExpenses(group.expenses);
         this.updateGroupBalance();
     }
     
-    clearAllExpenses() {
+    async clearAllExpenses() {
         if (!confirm('Are you sure you want to clear all expenses? This action cannot be undone.')) {
             return;
         }
         
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return;
         
         if (this.isLocalMode) {
@@ -177,11 +219,11 @@ class ExpensesManager {
             }
         }
         
-        this.renderExpenses(group.expenses);
+        await this.renderExpenses(group.expenses);
         this.updateGroupBalance();
     }
     
-    renderExpenses(expenses) {
+    async renderExpenses(expenses) {
         const list = document.getElementById('expenseList');
         if (!list) return;
         
@@ -193,31 +235,43 @@ class ExpensesManager {
         // 按日期排序（最新的在前）
         const sortedExpenses = expenses.sort((a, b) => new Date(b.date) - new Date(a.date));
         
-        list.innerHTML = sortedExpenses.map(expense => this.createExpenseItem(expense)).join('');
+        // 使用 Promise.all 來處理所有異步的 createExpenseItem 調用
+        const expenseItems = await Promise.all(
+            sortedExpenses.map(expense => this.createExpenseItem(expense))
+        );
+        
+        list.innerHTML = expenseItems.join('');
     }
     
-    createExpenseItem(expense) {
+    async createExpenseItem(expense) {
         // Handle both Firestore timestamp and regular date
         const date = expense.date && expense.date.toDate ? 
             expense.date.toDate() : 
             new Date(expense.date || expense.timestamp);
         
         // 獲取付錢的人和分錢的人的名稱
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
-        const paidByName = this.findMemberById(expense.paidBy)?.name || 'Unknown';
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        const paidByMember = await this.findMemberById(expense.paidBy);
+        const paidByName = paidByMember?.name || 'Unknown';
         
         let splitByText = '';
         if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
             // 自訂金額模式
-            splitByText = expense.splitBy.map(splitItem => {
-                const memberName = this.findMemberById(splitItem.memberId)?.name || 'Unknown';
+            const splitByPromises = expense.splitBy.map(async (splitItem) => {
+                const member = await this.findMemberById(splitItem.memberId);
+                const memberName = member?.name || 'Unknown';
                 return `${memberName} ($${splitItem.amount.toFixed(2)})`;
-            }).join(', ');
+            });
+            const splitByResults = await Promise.all(splitByPromises);
+            splitByText = splitByResults.join(', ');
         } else {
             // 平分模式
-            splitByText = expense.splitBy.map(id => 
-                this.findMemberById(id)?.name || 'Unknown'
-            ).join(', ');
+            const splitByPromises = expense.splitBy.map(async (id) => {
+                const member = await this.findMemberById(id);
+                return member?.name || 'Unknown';
+            });
+            const splitByResults = await Promise.all(splitByPromises);
+            splitByText = splitByResults.join(', ');
         }
         
         return `
@@ -233,28 +287,131 @@ class ExpensesManager {
                 <div class="expense-amount">
                     $${expense.amount.toFixed(2)}
                 </div>
-                <button class="delete-btn" onclick="app.expensesManager.deleteExpense(${expense.timestamp})">❌</button>
+                <button class="edit-btn pixel-icon" onclick="app.expensesManager.startEditExpense(${expense.timestamp})">✎</button>
+                <button class="delete-btn" style="margin-left:8px" onclick="app.expensesManager.deleteExpense(${expense.timestamp})">✖</button>
             </div>
         `;
     }
+
+    async startEditExpense(timestamp) {
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
+        if (!group) return;
+        const expense = group.expenses.find(e => e.timestamp === timestamp);
+        if (!expense) return;
+        this.editingTimestamp = timestamp;
+        this.editingOriginal = { ...expense };
+
+        // 基本欄位
+        const descInput = document.getElementById('description');
+        const amountInput = document.getElementById('amount');
+        const paidBySelect = document.getElementById('paidBy');
+        const dateInput = document.getElementById('transactionDate');
+        if (descInput) descInput.value = expense.description || '';
+        if (amountInput) amountInput.value = expense.amount;
+        if (paidBySelect) paidBySelect.value = expense.paidBy;
+        if (dateInput) {
+            const d = expense.date && expense.date.toDate ? expense.date.toDate() : new Date(expense.date || expense.timestamp);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const dd = String(d.getDate()).padStart(2,'0');
+            const hh = String(d.getHours()).padStart(2,'0');
+            const mi = String(d.getMinutes()).padStart(2,'0');
+            dateInput.value = `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+        }
+
+        // 重新渲染分攤選項並套用值
+        if (group) {
+            // 取正式成員 + pending email，與 groups.js 的 loadMembersForExpenseForm 一致
+            let activeMembers = [];
+            if (this.isLocalMode) {
+                activeMembers = group.members;
+            } else {
+                activeMembers = await this.app.groupsManager.getMemberData(group.members);
+            }
+            const pendingEmails = Array.isArray(group.pendingMembers) ? group.pendingMembers : [];
+            const pendingMembers = pendingEmails.map(email => ({ id: email, name: email, role: 'pending' }));
+            const allMembers = [...activeMembers, ...pendingMembers];
+            this.app.groupsManager.renderSplitOptions(allMembers);
+        }
+        // 設定分攤模式
+        const equalRadio = document.querySelector('input[name="splitMode"][value="equal"]');
+        const customRadio = document.querySelector('input[name="splitMode"][value="custom"]');
+        const splitContainer = document.getElementById('splitByContainer');
+        if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
+            if (customRadio) customRadio.checked = true;
+            if (splitContainer) {
+                expense.splitBy.forEach(item => {
+                    const cb = splitContainer.querySelector(`.split-checkbox[value="${item.memberId}"]`);
+                    if (cb) cb.checked = true;
+                    const amt = splitContainer.querySelector(`.split-amount-input[data-member-id="${item.memberId}"]`);
+                    if (amt) amt.value = item.amount.toFixed(2);
+                });
+            }
+        } else {
+            if (equalRadio) equalRadio.checked = true;
+            if (splitContainer) {
+                (expense.splitBy || []).forEach(id => {
+                    const cb = splitContainer.querySelector(`.split-checkbox[value="${id}"]`);
+                    if (cb) cb.checked = true;
+                });
+            }
+        }
+
+        // 將提交按鈕文字改為 Update
+        const submitBtn = document.querySelector('#expenseForm button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = 'Update';
+        const cancelBtn = document.getElementById('cancelEdit');
+        if (cancelBtn) cancelBtn.style.display = 'inline-block';
+    }
     
-    findMemberById(memberId) {
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+    async findMemberById(memberId) {
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return null;
         
         if (this.isLocalMode) {
             return group.members.find(m => m.id === memberId);
         } else {
             // Firebase 模式下需要從用戶數據中查找
-            // 這裡簡化處理，實際應該緩存用戶數據
-            return { name: memberId.substring(0, 8) + '...' };
+            const currentUser = this.app.currentUser;
+            if (!currentUser) return { name: 'Unknown' };
+            
+            // 如果 memberId 是 email（pending 成員），直接回傳 email 當名稱
+            if (memberId && memberId.includes && memberId.includes('@')) {
+                return { id: memberId, name: memberId };
+            }
+
+            if (memberId === currentUser.uid) {
+                return {
+                    id: memberId,
+                    name: currentUser.displayName || currentUser.email.split('@')[0]
+                };
+            }
+            
+            try {
+                const userDoc = await this.db.collection('users').doc(memberId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    return {
+                        id: memberId,
+                        name: userData.displayName || userData.email.split('@')[0]
+                    };
+                }
+            } catch (error) {
+                console.error('Error fetching user data for UID:', memberId, error);
+            }
+            
+            // 如果無法獲取用戶資料，使用 UID 作為名稱
+            return {
+                id: memberId,
+                name: memberId.substring(0, 8) + '...'
+            };
         }
     }
     
     updateGroupBalance() {
         if (!this.app.currentGroupId) return;
         
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return;
         
         const total = group.expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -269,9 +426,19 @@ class ExpensesManager {
         this.setDefaultDateTime();
         
         // 重新渲染分錢選項
-        const group = this.groups.find(g => g.id === this.app.currentGroupId);
+        const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (group) {
-            this.app.groupsManager.renderSplitOptions(group.members);
+            if (this.isLocalMode) {
+                this.app.groupsManager.renderSplitOptions(group.members);
+            } else {
+                // Firebase：載入正式成員 + pending email
+                this.app.groupsManager.getMemberData(group.members).then(activeMembers => {
+                    const pendingEmails = Array.isArray(group.pendingMembers) ? group.pendingMembers : [];
+                    const pendingMembers = pendingEmails.map(email => ({ id: email, name: email, role: 'pending' }));
+                    const allMembers = [...activeMembers, ...pendingMembers];
+                    this.app.groupsManager.renderSplitOptions(allMembers);
+                });
+            }
         }
     }
     
