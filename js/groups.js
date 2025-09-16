@@ -177,8 +177,8 @@ class GroupsManager {
             }
         }
         
-        // 直接進入成員管理頁面
-        this.showGroupMembers(group.id);
+        // 創建群組後停留在群組列表頁面
+        console.log('Group created successfully:', group.name);
     }
     
     renderGroups() {
