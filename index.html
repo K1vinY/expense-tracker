@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Expense Tracker</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
@@ -20,8 +21,8 @@
                     <button id="logoutBtn" class="pixel-button secondary">Logout</button>
                 </div>
                 
-                <!-- Login Form (Hidden by default) -->
-                <form class="login-form" id="loginForm">
+                <!-- Login Form -->
+                <form class="login-form" id="loginForm" style="display: flex;">
                     <input type="email" id="emailInput" placeholder="Email" class="pixel-input" required>
                     <input type="password" id="passwordInput" placeholder="Password" class="pixel-input" required>
                     <button type="submit" id="loginBtn" class="pixel-button primary">Login</button>
