@@ -112,7 +112,12 @@ class GroupsManager {
                     role: 'admin',
                     joinedAt: new Date().toISOString()
                 }
-            ] : [currentUser.uid], // Firebase 模式使用用戶 UID
+            ] : [{
+                id: currentUser.uid,
+                name: currentUser.displayName || currentUser.email.split('@')[0],
+                role: 'admin',
+                joinedAt: new Date().toISOString()
+            }], // Firebase 模式也儲存完整用戶資料
             createdAt: new Date().toISOString(),
             createdBy: this.isLocalMode ? 'local' : currentUser.uid
         };
@@ -257,8 +262,12 @@ class GroupsManager {
             });
             this.renderSplitOptions(group.members);
         } else {
-            // Firebase 模式：members 是 UID 陣列
+            // Firebase 模式：members 是 UID 陣列，需要轉換為完整物件
             const memberData = await this.getMemberData(group.members);
+            
+            // 更新群組的 members 陣列為完整物件
+            group.members = memberData;
+            
             memberData.forEach(member => {
                 if (paidBySelect) {
                     const option = document.createElement('option');
@@ -307,6 +316,8 @@ class GroupsManager {
             activeMembers = group.members;
         } else {
             activeMembers = await this.getMemberData(group.members);
+            // 更新群組的 members 陣列為完整物件
+            group.members = activeMembers;
         }
 
         // 取得 pending 成員（以 email 表示）
@@ -333,6 +344,11 @@ class GroupsManager {
     
     async getMemberData(memberUids) {
         if (this.isLocalMode) return memberUids;
+        
+        // 如果 memberUids 已經是完整物件，直接返回
+        if (memberUids.length > 0 && typeof memberUids[0] === 'object' && memberUids[0].name) {
+            return memberUids;
+        }
         
         const currentUser = this.app.currentUser;
         if (!currentUser) {
@@ -534,20 +550,25 @@ class GroupsManager {
         const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         if (!group) return null;
         
-        if (this.isLocalMode) {
-            return group.members.find(m => m.id === memberId);
-        } else {
-            // Firebase 模式下需要從用戶數據中查找
-            const currentUser = this.app.currentUser;
-            if (!currentUser) return { name: 'Unknown' };
-            
-            if (memberId === currentUser.uid) {
-                return {
-                    id: memberId,
-                    name: currentUser.displayName || currentUser.email.split('@')[0]
-                };
-            }
-            
+        // 如果 memberId 是 email（pending 成員），直接回傳 email 當名稱
+        if (memberId && memberId.includes && memberId.includes('@')) {
+            return { id: memberId, name: memberId };
+        }
+        
+        // 先檢查群組成員列表（現在包含完整的用戶資料）
+        const groupMember = group.members.find(m => m.id === memberId);
+        if (groupMember) {
+            return groupMember;
+        }
+        
+        // 檢查待處理成員列表
+        const pendingMember = group.pendingMembers && group.pendingMembers.includes(memberId);
+        if (pendingMember) {
+            return { id: memberId, name: memberId };
+        }
+        
+        // 如果都找不到，嘗試從 Firestore 查詢（用於已刪除的成員）
+        if (!this.isLocalMode) {
             try {
                 const userDoc = await this.db.collection('users').doc(memberId).get();
                 if (userDoc.exists) {
@@ -558,15 +579,15 @@ class GroupsManager {
                     };
                 }
             } catch (error) {
-                console.error('Error fetching user data for UID:', memberId, error);
+                console.error('Error fetching user data for deleted member:', memberId, error);
             }
-            
-            // 如果無法獲取用戶資料，使用 UID 作為名稱
-            return {
-                id: memberId,
-                name: memberId.substring(0, 8) + '...'
-            };
         }
+        
+        // 如果都找不到，回傳預設值
+        return {
+            id: memberId,
+            name: memberId.substring(0, 8) + '...'
+        };
     }
     
     updateGroupBalance() {

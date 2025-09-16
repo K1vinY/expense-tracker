@@ -69,6 +69,11 @@ class MembersManager {
     async getMemberData(memberUids) {
         if (this.isLocalMode) return memberUids;
         
+        // 如果 memberUids 已經是完整物件，直接返回
+        if (memberUids.length > 0 && typeof memberUids[0] === 'object' && memberUids[0].name) {
+            return memberUids;
+        }
+        
         const currentUser = this.app.currentUser;
         const group = this.app.groups.find(g => g.id === this.app.currentGroupId);
         const ownerUid = group ? group.createdBy : null;

@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Expense Tracker</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -15,21 +13,213 @@
         <header class="header">
             <h1 class="title">💰 Pixel Expense Tracker</h1>
             <div class="auth-section" id="authSection">
+                <!-- User Info (Hidden by default) -->
                 <div class="user-info" id="userInfo" style="display: none;">
                     <span id="userDisplayName"></span>
                     <button id="userSettingsBtn" class="pixel-button secondary">⚙️ Settings</button>
                     <button id="logoutBtn" class="pixel-button secondary">Logout</button>
                 </div>
-                <div class="login-form" id="loginForm">
-                    <input type="email" id="emailInput" placeholder="Email" class="pixel-input">
-                    <input type="password" id="passwordInput" placeholder="Password" class="pixel-input">
-                    <button id="loginBtn" class="pixel-button primary">Login</button>
-                    <button id="registerBtn" class="pixel-button secondary">Register</button>
-                </div>
+                
+                <!-- Login Form (Hidden by default) -->
+                <form class="login-form" id="loginForm">
+                    <input type="email" id="emailInput" placeholder="Email" class="pixel-input" required>
+                    <input type="password" id="passwordInput" placeholder="Password" class="pixel-input" required>
+                    <button type="submit" id="loginBtn" class="pixel-button primary">Login</button>
+                    <button type="button" id="registerBtn" class="pixel-button secondary">Register</button>
+                </form>
             </div>
         </header>
 
-        <!-- Registration Page (Hidden by default) -->
+        <!-- Main Content -->
+        <main class="main-content">
+        <!-- Groups Section -->
+        <section class="groups-section" style="display: none;">
+            <div class="groups-container">
+                <h2 class="section-title">📁 My Groups</h2>
+                <div class="groups-grid" id="groupsGrid">
+                    <!-- Groups will be dynamically inserted here -->
+                </div>
+                <button id="addGroupBtn" class="pixel-button primary add-group-btn">➕ Add New Group</button>
+            </div>
+        </section>
+
+        <!-- Group Detail Section -->
+        <section class="group-detail-section" style="display: none;">
+            <div class="group-detail-container">
+                <div class="group-header">
+                    <button id="backToGroups" class="pixel-button secondary">← Back to Groups</button>
+                    <h2 class="group-title" id="groupTitle">Group Transactions</h2>
+                    <div class="group-balance" id="groupBalance">$0</div>
+                </div>
+
+                <!-- Group Actions -->
+                <div class="group-actions">
+                    <button id="viewBalances" class="pixel-button secondary">💰 View Balances</button>
+                    <button id="manageMembers" class="pixel-button secondary">👥 Manage Members</button>
+                    <button id="groupSettings" class="pixel-button secondary">⚙️ Settings</button>
+                </div>
+
+                <!-- Expense Form -->
+                <div class="form-container">
+                    <h3 class="section-title">📝 Add Transaction</h3>
+                    <form id="expenseForm" class="pixel-form">
+                        <div class="form-group">
+                            <label for="description">Description:</label>
+                            <input type="text" id="description" placeholder="e.g. Lunch" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">Amount:</label>
+                            <input type="number" id="amount" placeholder="0" step="0.01" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transactionDate">Date & Time:</label>
+                            <input type="datetime-local" id="transactionDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="paidBy">Paid by:</label>
+                            <select id="paidBy" required>
+                                <option value="">Select who paid</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="splitBy">Split by:</label>
+                            <div class="split-options">
+                                <div class="split-mode-selector">
+                                    <label class="split-mode-option">
+                                        <input type="radio" name="splitMode" value="equal" checked>
+                                        <span class="split-mode-custom"></span>
+                                        Equal Split
+                                    </label>
+                                    <label class="split-mode-option">
+                                        <input type="radio" name="splitMode" value="custom">
+                                        <span class="split-mode-custom"></span>
+                                        Custom Amount
+                                    </label>
+                                </div>
+                                <div id="splitByContainer" class="split-container">
+                                    <!-- Split options will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="pixel-button primary">💾 Save</button>
+                            <button type="button" id="cancelEdit" class="pixel-button secondary" style="display: none;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Transaction List -->
+                <div class="list-container">
+                    <h3 class="section-title">📋 Transactions</h3>
+                    <div class="filter-controls">
+                        <button id="clearAll" class="pixel-button danger">🗑️ Clear All</button>
+                    </div>
+                    <div id="expenseList" class="expense-list">
+                        <!-- Transaction items will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Group Members Section -->
+        <section class="group-members-section" style="display: none;">
+            <div class="group-members-container">
+                <div class="group-header">
+                    <button id="backFromMembers" class="pixel-button secondary">← Back</button>
+                    <h2 class="group-title" id="membersGroupTitle">Group Members</h2>
+                    <div class="member-count" id="memberCount">0 members</div>
+                </div>
+
+                <!-- Members List -->
+                <div class="list-container">
+                    <h3 class="section-title">📋 Group Members</h3>
+                    <div id="membersList" class="members-list">
+                        <!-- Members will be dynamically inserted here -->
+                    </div>
+                </div>
+
+                <!-- Add Member Form -->
+                <div class="form-container">
+                    <h3 class="section-title">👥 Add New Member</h3>
+                    <form id="addMemberForm" class="pixel-form">
+                        <div class="form-group">
+                            <label for="memberName">Member Email:</label>
+                            <input type="email" id="memberName" placeholder="e.g. john@example.com" required>
+                        </div>
+                        <button type="submit" class="pixel-button primary">➕ Add Member</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Group Settings Section -->
+        <section class="group-settings-section" style="display: none;">
+            <div class="group-settings-container">
+                <div class="group-header">
+                    <button id="backFromSettings" class="pixel-button secondary">← Back</button>
+                    <h2 class="group-title" id="settingsGroupTitle">Group Settings</h2>
+                    <div class="settings-status" id="settingsStatus">Active</div>
+                </div>
+
+                <!-- Group Information -->
+                <div class="form-container">
+                    <h3 class="section-title">📝 Group Information</h3>
+                    <form id="groupInfoForm" class="pixel-form">
+                        <div class="form-group">
+                            <label for="groupNameEdit">Group Name:</label>
+                            <input type="text" id="groupNameEdit" placeholder="Enter group name" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="groupDescription">Description (optional):</label>
+                            <textarea id="groupDescription" placeholder="Enter group description" rows="3"></textarea>
+                        </div>
+                        
+                        <button type="submit" class="pixel-button primary">💾 Save Changes</button>
+                    </form>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="stats-container danger-zone">
+                    <h3 class="section-title">⚠️ Danger Zone</h3>
+                    <div class="danger-actions">
+                        <button id="deleteGroup" class="pixel-button danger">🗑️ Delete Group</button>
+                        <button id="leaveGroup" class="pixel-button danger">👋 Leave Group</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Group Balances Section -->
+        <section class="group-balances-section" style="display: none;">
+            <div class="group-balances-container">
+                <div class="group-header">
+                    <button id="backFromBalances" class="pixel-button secondary">← Back</button>
+                    <h2 class="group-title" id="balancesGroupTitle">Group Balances</h2>
+                    <div class="balances-summary" id="balancesSummary">All settled up!</div>
+                </div>
+
+                <!-- Balances List -->
+                <div class="balances-list" id="balancesList">
+                    <!-- Balance items will be dynamically inserted here -->
+                </div>
+
+                <!-- Settlement Suggestions -->
+                <div class="settlement-container" id="settlementContainer" style="display: none;">
+                    <h3 class="section-title">💡 Settlement Suggestions</h3>
+                    <div id="settlementSuggestions" class="settlement-suggestions">
+                        <!-- Settlement suggestions will be dynamically inserted here -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Registration Section -->
         <section class="registration-section" id="registrationSection" style="display: none;">
             <div class="registration-container">
                 <div class="registration-header">
@@ -66,26 +256,23 @@
             </div>
         </section>
 
-        <!-- User Settings Page (Hidden by default) -->
+        <!-- User Settings Section -->
         <section class="user-settings-section" id="userSettingsSection" style="display: none;">
             <div class="user-settings-container">
                 <div class="user-settings-header">
                     <h2 class="user-settings-title">⚙️ User Settings</h2>
                     <button id="backFromUserSettings" class="pixel-button secondary">← Back</button>
                 </div>
-                
                 <form id="userSettingsForm" class="pixel-form">
                     <div class="form-group">
                         <label for="settingsEmail">Email Address:</label>
                         <input type="email" id="settingsEmail" readonly class="pixel-input readonly">
                         <small class="form-help">Email cannot be changed</small>
                     </div>
-                    
                     <div class="form-group">
                         <label for="settingsName">Display Name:</label>
                         <input type="text" id="settingsName" placeholder="Enter your name" required class="pixel-input">
                     </div>
-                    
                     <div class="form-actions">
                         <button type="submit" class="pixel-button primary">💾 Save Changes</button>
                         <button type="button" id="resetPasswordBtn" class="pixel-button secondary">🔒 Reset Password</button>
@@ -95,30 +282,26 @@
             </div>
         </section>
 
-        <!-- Reset Password Page (Hidden by default) -->
+        <!-- Reset Password Section -->
         <section class="reset-password-section" id="resetPasswordSection" style="display: none;">
             <div class="reset-password-container">
                 <div class="reset-password-header">
                     <h2 class="reset-password-title">🔒 Reset Password</h2>
                     <button id="backFromResetPassword" class="pixel-button secondary">← Back to Settings</button>
                 </div>
-                
                 <form id="resetPasswordForm" class="pixel-form">
                     <div class="form-group">
                         <label for="resetCurrentPassword">Current Password:</label>
                         <input type="password" id="resetCurrentPassword" placeholder="Enter current password" required class="pixel-input">
                     </div>
-                    
                     <div class="form-group">
                         <label for="resetNewPassword">New Password:</label>
                         <input type="password" id="resetNewPassword" placeholder="Enter new password (min 6 characters)" required minlength="6" class="pixel-input">
                     </div>
-                    
                     <div class="form-group">
                         <label for="resetConfirmPassword">Confirm New Password:</label>
                         <input type="password" id="resetConfirmPassword" placeholder="Confirm new password" required minlength="6" class="pixel-input">
                     </div>
-                    
                     <div class="form-actions">
                         <button type="submit" class="pixel-button primary">🔒 Update Password</button>
                         <button type="button" id="cancelResetPassword" class="pixel-button secondary">Cancel</button>
@@ -126,1792 +309,41 @@
                 </form>
             </div>
         </section>
-
-        <!-- Groups Overview Section -->
-        <section class="groups-section">
-            <div class="groups-container">
-                <h2 class="section-title">📁 My Groups</h2>
-                <div class="groups-grid" id="groupsGrid">
-                    <!-- Groups will be dynamically inserted here -->
-                </div>
-                <button id="addGroupBtn" class="pixel-button primary add-group-btn">➕ Add New Group</button>
-            </div>
-        </section>
-
-        <!-- Group Member Management Section (Hidden by default) -->
-        <section class="group-members-section" id="groupMembersSection" style="display: none;">
-            <div class="group-members-container">
-                <div class="group-header">
-                    <button id="backFromMembers" class="pixel-button secondary">← Back</button>
-                    <h2 class="group-title" id="membersGroupTitle">Group Members</h2>
-                    <div class="member-count" id="memberCount">0 members</div>
-                </div>
-
-                <!-- Members List -->
-                <div class="list-container">
-                    <h3 class="section-title">📋 Group Members</h3>
-                    <div id="membersList" class="members-list">
-                        <!-- Members will be dynamically inserted here -->
-                    </div>
-                </div>
-
-                <!-- Add Member Form -->
-            <div class="form-container">
-                    <h3 class="section-title">👥 Add New Member</h3>
-                    <form id="addMemberForm" class="pixel-form">
-                        <div class="form-group">
-                            <label for="memberName">Member Email:</label>
-                            <input type="email" id="memberName" placeholder="e.g. john@example.com" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="memberRole">Role:</label>
-                            <select id="memberRole">
-                                <option value="member">👤 Member</option>
-                                <option value="admin">👑 Admin</option>
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="pixel-button primary">➕ Add Member</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Group Settings Section (Hidden by default) -->
-        <section class="group-settings-section" id="groupSettingsSection" style="display: none;">
-            <div class="group-settings-container">
-                <div class="group-header">
-                    <button id="backFromSettings" class="pixel-button secondary">← Back</button>
-                    <h2 class="group-title" id="settingsGroupTitle">Group Settings</h2>
-                    <div class="settings-status" id="settingsStatus">Active</div>
-                </div>
-
-                <!-- Group Information -->
-            <div class="form-container">
-                    <h3 class="section-title">📝 Group Information</h3>
-                    <form id="groupInfoForm" class="pixel-form">
-                    <div class="form-group">
-                            <label for="groupNameEdit">Group Name:</label>
-                            <input type="text" id="groupNameEdit" placeholder="Enter group name" required>
-                    </div>
-                    
-                    <div class="form-group">
-                            <label for="groupDescription">Description (optional):</label>
-                            <textarea id="groupDescription" placeholder="Enter group description" rows="3"></textarea>
-                        </div>
-                        
-                        <button type="submit" class="pixel-button primary">💾 Save Changes</button>
-                    </form>
-                </div>
-
-                    
-                    
-                <!-- Danger Zone -->
-                <div class="stats-container danger-zone">
-                    <h3 class="section-title">⚠️ Danger Zone</h3>
-                    <div class="danger-actions">
-                        <button id="deleteGroup" class="pixel-button danger">🗑️ Delete Group</button>
-                        <button id="leaveGroup" class="pixel-button danger">👋 Leave Group</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Group Balances Section (Hidden by default) -->
-        <section class="group-balances-section" id="groupBalancesSection" style="display: none;">
-            <div class="group-balances-container">
-                <div class="group-header">
-                    <button id="backFromBalances" class="pixel-button secondary">← Back</button>
-                    <h2 class="group-title" id="balancesGroupTitle">Group Balances</h2>
-                    <div class="balances-summary" id="balancesSummary">All settled up!</div>
-                </div>
-
-                <!-- Balances List -->
-                <div class="balances-list" id="balancesList">
-                    <!-- Balance items will be dynamically inserted here -->
-                </div>
-
-                <!-- Settlement Suggestions -->
-                <div class="settlement-container" id="settlementContainer" style="display: none;">
-                    <h3 class="section-title">💡 Settlement Suggestions</h3>
-                    <div id="settlementSuggestions" class="settlement-suggestions">
-                        <!-- Settlement suggestions will be dynamically inserted here -->
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Group Detail Section (Hidden by default) -->
-        <section class="group-detail-section" id="groupDetailSection" style="display: none;">
-            <div class="group-detail-container">
-                <div class="group-header">
-                    <button id="backToGroups" class="pixel-button secondary">← Back to Groups</button>
-                    <h2 class="group-title" id="groupTitle">Group Transactions</h2>
-                    <div class="group-balance" id="groupBalance">$0</div>
-                </div>
-
-                <!-- Group Actions -->
-                <div class="group-actions">
-                    <button id="viewBalances" class="pixel-button secondary">💰 View Balances</button>
-                    <button id="manageMembers" class="pixel-button secondary">👥 Manage Members</button>
-                    <button id="groupSettings" class="pixel-button secondary">⚙️ Settings</button>
-                </div>
-
-                <!-- Expense Form -->
-                <div class="form-container">
-                    <h3 class="section-title">📝 Add Transaction</h3>
-                <form id="expenseForm" class="pixel-form">
-                    <div class="form-group">
-                            <label for="description">Description:</label>
-                            <input type="text" id="description" placeholder="e.g. Lunch" required>
-                    </div>
-                    
-                    <div class="form-group">
-                            <label for="amount">Amount:</label>
-                        <input type="number" id="amount" placeholder="0" step="0.01" required>
-                    </div>
-                    
-                    <div class="form-group">
-                            <label for="transactionDate">Date & Time:</label>
-                            <input type="datetime-local" id="transactionDate" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="paidBy">Paid by:</label>
-                            <select id="paidBy" required>
-                                <option value="">Select who paid</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                            <label for="splitBy">Split by:</label>
-                            <div class="split-options">
-                                <div class="split-mode-selector">
-                                    <label class="split-mode-option">
-                                        <input type="radio" name="splitMode" value="equal" checked>
-                                        <span class="split-mode-custom"></span>
-                                        Equal Split
-                            </label>
-                                    <label class="split-mode-option">
-                                        <input type="radio" name="splitMode" value="custom">
-                                        <span class="split-mode-custom"></span>
-                                        Custom Amount
-                            </label>
-                                </div>
-                                <div id="splitByContainer" class="split-container">
-                                    <!-- Split options will be dynamically inserted here -->
-                                </div>
-                        </div>
-                    </div>
-                    
-                        <button type="submit" class="pixel-button primary">💾 Save</button>
-                </form>
-            </div>
-
-                <!-- Transaction List -->
-            <div class="list-container">
-                    <h3 class="section-title">📋 Transactions</h3>
-                <div class="filter-controls">
-                        <button id="clearAll" class="pixel-button danger">🗑️ Clear All</button>
-                </div>
-                <div id="expenseList" class="expense-list">
-                        <!-- Transaction items will be dynamically inserted here -->
-                </div>
-            </div>
-
-            </div>
-        </section>
+        </main>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Scripts -->
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-    <script src="firebase-config.js"></script>
-
     <script>
-        // 等待 Firebase 初始化完成
-        let db;
-        let auth;
-        let currentUser = null;
-        let isLocalMode = false; // 設定為 false 使用 Firebase
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAhVXGN_C1rT9sZnseXLYSVRvy5GYlgRk",
+            authDomain: "expense-tracker-9523d.firebaseapp.com",
+            projectId: "expense-tracker-9523d",
+            storageBucket: "expense-tracker-9523d.firebasestorage.app",
+            messagingSenderId: "345966353793",
+            appId: "1:345966353793:web:4c3aecf936dbb3f6301c80"
+        };
         
-        // 確保 Firebase 已載入
-        if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-            db = window.db || firebase.firestore();
-            auth = firebase.auth();
-            console.log('Firebase initialized successfully');
-            console.log('Firebase db object:', db);
-            console.log('Firebase auth object:', auth);
-        } else {
-            console.error('Firebase not initialized properly');
-            // 如果 Firebase 載入失敗，切換到本地模式
-            isLocalMode = true;
-            console.log('Switching to local mode due to Firebase initialization failure');
-        }
-
-        // Group-based Expense Tracker (支援本地和 Firebase 模式)
-        class GroupExpenseTracker {
-            constructor() {
-                this.groups = [];
-                this.currentGroupId = null;
-                this.init();
-            }
-            
-            init() {
-                this.setupAuth();
-                this.bindEvents();
-            }
-            
-            setupAuth() {
-                if (isLocalMode) {
-                    // 本地模式不需要身份驗證
-                    this.loadGroups();
-                    return;
-                }
-                
-                // 清理舊的本地數據
-                localStorage.removeItem('groups');
-                console.log('Cleared old local data');
-                
-                // 監聽身份驗證狀態變化
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        // 用戶已登入
-                        currentUser = user;
-                        console.log('User signed in:', user.email);
-                        
-                        // 確保用戶文檔存在
-                        await this.ensureUserDocument(user);
-                        
-                        this.showUserInfo();
-                        this.loadGroups();
-                    } else {
-                        // 用戶未登入
-                        currentUser = null;
-                        console.log('User signed out');
-                        this.showLoginForm();
-                        this.groups = [];
-                        this.renderGroups();
-                    }
-                });
-            }
-            
-            showUserInfo() {
-                document.getElementById('userInfo').style.display = 'flex';
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('registrationSection').style.display = 'none';
-                document.getElementById('userSettingsSection').style.display = 'none';
-                document.getElementById('resetPasswordSection').style.display = 'none';
-                document.getElementById('userDisplayName').textContent = currentUser.displayName || currentUser.email.split('@')[0];
-                
-                // 確保回到主頁面
-                document.querySelector('.groups-section').style.display = 'block';
-                document.querySelector('.group-detail-section').style.display = 'none';
-                document.querySelector('.group-members-section').style.display = 'none';
-                document.querySelector('.group-settings-section').style.display = 'none';
-                document.querySelector('.group-balances-section').style.display = 'none';
-                
-                // 重新載入群組數據
-                this.loadGroups();
-            }
-            
-            showLoginForm() {
-                document.getElementById('userInfo').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'flex';
-                document.getElementById('registrationSection').style.display = 'none';
-            }
-            
-            showRegistrationForm() {
-                document.getElementById('userInfo').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('registrationSection').style.display = 'block';
-                document.getElementById('userSettingsSection').style.display = 'none';
-            }
-            
-            showUserSettings() {
-                document.getElementById('userInfo').style.display = 'none';
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('registrationSection').style.display = 'none';
-                document.getElementById('userSettingsSection').style.display = 'block';
-                document.getElementById('resetPasswordSection').style.display = 'none';
-                this.loadUserSettings();
-            }
-            
-            showResetPassword() {
-                document.getElementById('userSettingsSection').style.display = 'none';
-                document.getElementById('resetPasswordSection').style.display = 'block';
-            }
-            
-            loadUserSettings() {
-                if (!currentUser) return;
-                
-                document.getElementById('settingsEmail').value = currentUser.email;
-                document.getElementById('settingsName').value = currentUser.displayName || currentUser.email.split('@')[0];
-            }
-            
-            async ensureUserDocument(user) {
-                try {
-                    // 檢查用戶文檔是否存在
-                    const userDoc = await db.collection('users').doc(user.uid).get();
-                    
-                    if (!userDoc.exists) {
-                        // 如果文檔不存在，創建它
-                        await db.collection('users').doc(user.uid).set({
-                            email: user.email,
-                            displayName: user.displayName || user.email.split('@')[0],
-                            createdAt: new Date().toISOString(),
-                            lastLoginAt: new Date().toISOString()
-                        });
-                        console.log('User document created for:', user.email);
-                    } else {
-                        // 如果文檔存在，更新 lastLoginAt
-                        await db.collection('users').doc(user.uid).update({
-                            lastLoginAt: new Date().toISOString()
-                        });
-                        console.log('User document updated for:', user.email);
-                    }
-                } catch (error) {
-                    console.error('Error ensuring user document:', error);
-                    // 不阻止登入流程，只是記錄錯誤
-                }
-            }
-            
-            async login() {
-                const email = document.getElementById('emailInput').value;
-                const password = document.getElementById('passwordInput').value;
-                
-                if (!email || !password) {
-                    alert('Please enter both email and password');
-                    return;
-                }
-                
-                try {
-                    await auth.signInWithEmailAndPassword(email, password);
-                    console.log('Login successful');
-                } catch (error) {
-                    console.error('Login error:', error);
-                    alert('Login failed: ' + error.message);
-                }
-            }
-            
-            async register() {
-                const email = document.getElementById('regEmail').value;
-                const name = document.getElementById('regName').value;
-                const password = document.getElementById('regPassword').value;
-                const confirmPassword = document.getElementById('regConfirmPassword').value;
-                
-                if (!email || !name || !password || !confirmPassword) {
-                    alert('Please fill in all fields');
-                    return;
-                }
-                
-                if (password !== confirmPassword) {
-                    alert('Passwords do not match');
-                    return;
-                }
-                
-                if (password.length < 6) {
-                    alert('Password must be at least 6 characters');
-                    return;
-                }
-                
-                try {
-                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                    const user = userCredential.user;
-                    
-                    // 更新用戶的顯示名稱
-                    await user.updateProfile({
-                        displayName: name
-                    });
-                    
-                    // 創建用戶資料文檔
-                    await db.collection('users').doc(user.uid).set({
-                        email: email,
-                        displayName: name,
-                        createdAt: new Date().toISOString(),
-                        lastLoginAt: new Date().toISOString()
-                    }, { merge: true });
-                    
-                    // 檢查是否有待處理的邀請
-                    await this.checkPendingInvitations(user.uid, email);
-                    
-                    console.log('Registration successful');
-                    alert('Account created successfully!');
-                } catch (error) {
-                    console.error('Registration error:', error);
-                    alert('Registration failed: ' + error.message);
-                }
-            }
-            
-            async checkPendingInvitations(userId, email) {
-                try {
-                    // 查找待處理的邀請
-                    const invitationsQuery = await db.collection('invitations')
-                        .where('invitedEmail', '==', email)
-                        .where('status', '==', 'pending')
-                        .get();
-                    
-                    if (!invitationsQuery.empty) {
-                        const invitations = [];
-                        invitationsQuery.forEach(doc => {
-                            invitations.push({ id: doc.id, ...doc.data() });
-                        });
-                        
-                        // 顯示邀請確認對話框
-                        this.showInvitationsDialog(invitations, userId);
-                    }
-                } catch (error) {
-                    console.error('Error checking invitations:', error);
-                }
-            }
-            
-            showInvitationsDialog(invitations, userId) {
-                let message = 'You have pending group invitations:\n\n';
-                invitations.forEach((inv, index) => {
-                    message += `${index + 1}. ${inv.groupName} (invited by ${inv.invitedBy})\n`;
-                });
-                message += '\nDo you want to accept all invitations?';
-                
-                if (confirm(message)) {
-                    this.acceptAllInvitations(invitations, userId);
-                }
-            }
-            
-            async acceptAllInvitations(invitations, userId) {
-                try {
-                    for (const invitation of invitations) {
-                        // 將用戶添加到群組
-                        await db.collection('groups').doc(invitation.groupId).update({
-                            members: firebase.firestore.FieldValue.arrayUnion(userId)
-                        });
-                        
-                        // 更新邀請狀態
-                        await db.collection('invitations').doc(invitation.id).update({
-                            status: 'accepted',
-                            acceptedAt: new Date().toISOString()
-                        });
-                    }
-                    
-                    alert('All invitations accepted! Please refresh the page to see your groups.');
-                } catch (error) {
-                    console.error('Error accepting invitations:', error);
-                    alert('Failed to accept some invitations. Please try again.');
-                }
-            }
-            
-            async logout() {
-                try {
-                    await auth.signOut();
-                    console.log('Logout successful');
-                } catch (error) {
-                    console.error('Logout error:', error);
-                    alert('Logout failed: ' + error.message);
-                }
-            }
-            
-            async updateUserSettings() {
-                if (!currentUser) return;
-                
-                const newName = document.getElementById('settingsName').value;
-                
-                if (!newName) {
-                    alert('Please enter a display name');
-                    return;
-                }
-                
-                try {
-                    // 更新顯示名稱
-                    if (newName !== currentUser.displayName) {
-                        await currentUser.updateProfile({
-                            displayName: newName
-                        });
-                        
-                        // 更新 Firestore 中的用戶資料（使用 set 方法，如果文檔不存在會創建）
-                        await db.collection('users').doc(currentUser.uid).set({
-                            email: currentUser.email,
-                            displayName: newName,
-                            createdAt: new Date().toISOString(),
-                            lastLoginAt: new Date().toISOString()
-                        }, { merge: true }); // merge: true 表示如果文檔存在就更新，不存在就創建
-                        
-                        console.log('Display name updated');
-                    }
-                    
-                    // 更新本地顯示
-                    this.showUserInfo();
-                    
-                    alert('Settings updated successfully!');
-                    
-                } catch (error) {
-                    console.error('Error updating settings:', error);
-                    alert('Failed to update settings: ' + error.message);
-                }
-            }
-            
-            async resetPassword() {
-                if (!currentUser) return;
-                
-                const currentPassword = document.getElementById('resetCurrentPassword').value;
-                const newPassword = document.getElementById('resetNewPassword').value;
-                const confirmPassword = document.getElementById('resetConfirmPassword').value;
-                
-                if (!currentPassword || !newPassword || !confirmPassword) {
-                    alert('Please fill in all password fields');
-                    return;
-                }
-                
-                if (newPassword !== confirmPassword) {
-                    alert('New passwords do not match');
-                    return;
-                }
-                
-                if (newPassword.length < 6) {
-                    alert('New password must be at least 6 characters');
-                    return;
-                }
-                
-                try {
-                    // 重新認證用戶
-                    const credential = firebase.auth.EmailAuthProvider.credential(
-                        currentUser.email, 
-                        currentPassword
-                    );
-                    await currentUser.reauthenticateWithCredential(credential);
-                    
-                    // 更新密碼
-                    await currentUser.updatePassword(newPassword);
-                    console.log('Password updated');
-                    
-                    alert('Password updated successfully!');
-                    
-                    // 清空表單並返回設定頁面
-                    document.getElementById('resetCurrentPassword').value = '';
-                    document.getElementById('resetNewPassword').value = '';
-                    document.getElementById('resetConfirmPassword').value = '';
-                    this.showUserSettings();
-                    
-                } catch (error) {
-                    console.error('Error updating password:', error);
-                    if (error.code === 'auth/wrong-password') {
-                        alert('Current password is incorrect');
-                    } else if (error.code === 'auth/weak-password') {
-                        alert('New password is too weak');
-                    } else {
-                        alert('Failed to update password: ' + error.message);
-                    }
-                }
-            }
-            
-            async loadGroups() {
-                console.log('loadGroups called, isLocalMode:', isLocalMode);
-                console.log('currentUser:', currentUser);
-                console.log('db:', db);
-                
-                if (isLocalMode) {
-                    // 本地模式
-                    console.log('Loading groups from localStorage');
-                    this.groups = JSON.parse(localStorage.getItem('groups')) || [];
-                    this.renderGroups();
-                    this.updateTotalBalance();
-                } else {
-                    // Firebase 模式
-                    try {
-                        if (!db) {
-                            throw new Error('Firebase not initialized');
-                        }
-                        if (!currentUser) {
-                            console.log('No user logged in, cannot load groups');
-                            this.groups = [];
-                            this.renderGroups();
-                            return;
-                        }
-                        
-                        console.log('Loading groups from Firebase for user:', currentUser.uid);
-                        
-                        // 先測試基本查詢
-                        console.log('Testing basic query...');
-                        const testSnapshot = await db.collection('groups').limit(5).get();
-                        console.log('Basic query result:', testSnapshot.docs.length, 'documents');
-                        
-                        // 再嘗試用戶特定查詢
-                        console.log('Testing user-specific query...');
-                        const snapshot = await db.collection('groups')
-                            .where('members', 'array-contains', currentUser.uid)
-                            .get();
-                        
-                        console.log('User-specific query result:', snapshot.docs.length, 'documents');
-                        console.log('Query docs:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
-                        
-                        this.groups = snapshot.docs.map(doc => ({
-                            id: doc.id,
-                            ...doc.data()
-                        }));
-                        console.log('Loaded groups from Firebase:', this.groups);
-                        this.renderGroups();
-                        this.updateTotalBalance();
-                    } catch (error) {
-                        console.error('Error loading groups:', error);
-                        console.error('Error code:', error.code);
-                        console.error('Error message:', error.message);
-                        console.log('Firebase error, showing empty groups');
-                        this.groups = [];
-                        this.renderGroups();
-                        this.updateTotalBalance();
-                        
-                        // 顯示詳細錯誤信息給用戶
-                        let errorMessage = 'Failed to load groups. ';
-                        if (error.code === 'permission-denied') {
-                            errorMessage += 'Permission denied. Please check Firestore security rules.';
-                        } else if (error.code === 'failed-precondition') {
-                            errorMessage += 'Database query failed. This might be due to missing index.';
-                        } else if (error.code === 'unavailable') {
-                            errorMessage += 'Firebase service is unavailable. Please check your internet connection.';
-                        } else {
-                            errorMessage += `Error: ${error.message} (Code: ${error.code})`;
-                        }
-                        
-                        alert(errorMessage);
-                    }
-                }
-            }
-            
-            bindEvents() {
-                // Authentication events
-                document.getElementById('loginBtn').addEventListener('click', () => {
-                    this.login();
-                });
-                
-                document.getElementById('registerBtn').addEventListener('click', () => {
-                    this.showRegistrationForm();
-                });
-                
-                document.getElementById('logoutBtn').addEventListener('click', () => {
-                    this.logout();
-                });
-                
-                document.getElementById('userSettingsBtn').addEventListener('click', () => {
-                    this.showUserSettings();
-                });
-                
-                // Registration events
-                document.getElementById('registrationForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.register();
-                });
-                
-                document.getElementById('backToLogin').addEventListener('click', () => {
-                    this.showLoginForm();
-                });
-                
-                document.getElementById('cancelRegistration').addEventListener('click', () => {
-                    this.showLoginForm();
-                });
-                
-                // User settings events
-                document.getElementById('userSettingsForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.updateUserSettings();
-                });
-                
-                document.getElementById('resetPasswordBtn').addEventListener('click', () => {
-                    this.showResetPassword();
-                });
-                
-                document.getElementById('backFromUserSettings').addEventListener('click', () => {
-                    this.showUserInfo();
-                });
-                
-                document.getElementById('cancelUserSettings').addEventListener('click', () => {
-                    this.showUserInfo();
-                });
-                
-                // Reset password events
-                document.getElementById('resetPasswordForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.resetPassword();
-                });
-                
-                document.getElementById('backFromResetPassword').addEventListener('click', () => {
-                    this.showUserSettings();
-                });
-                
-                document.getElementById('cancelResetPassword').addEventListener('click', () => {
-                    this.showUserSettings();
-                });
-                
-                // Group management
-                document.getElementById('addGroupBtn').addEventListener('click', () => {
-                    this.addGroup();
-                });
-                
-                document.getElementById('backToGroups').addEventListener('click', () => {
-                    this.showGroupsView();
-                });
-                
-                document.getElementById('backFromMembers').addEventListener('click', () => {
-                    this.showGroupDetail(this.currentGroupId);
-                });
-                
-                // Member management
-                document.getElementById('addMemberForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.addMember();
-                });
-                
-                document.getElementById('manageMembers').addEventListener('click', () => {
-                    this.showGroupMembers(this.currentGroupId);
-                });
-                
-                document.getElementById('groupSettings').addEventListener('click', () => {
-                    this.showGroupSettings(this.currentGroupId);
-                });
-                
-                document.getElementById('viewBalances').addEventListener('click', () => {
-                    this.showGroupBalances(this.currentGroupId);
-                });
-                
-                document.getElementById('backFromBalances').addEventListener('click', () => {
-                    this.showGroupDetail(this.currentGroupId);
-                });
-                
-                document.getElementById('backFromSettings').addEventListener('click', () => {
-                    this.showGroupDetail(this.currentGroupId);
-                });
-                
-                document.getElementById('groupInfoForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.updateGroupInfo();
-                });
-                
-                document.getElementById('deleteGroup').addEventListener('click', () => {
-                    this.deleteGroup();
-                });
-                
-                document.getElementById('leaveGroup').addEventListener('click', () => {
-                    this.leaveGroup();
-                });
-                
-                // Expense management
-                document.getElementById('expenseForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.addExpense();
-                });
-                
-                document.getElementById('clearAll').addEventListener('click', () => {
-                    this.clearAllExpenses();
-                });
-            }
-            
-            async addGroup() {
-                if (!isLocalMode && !currentUser) {
-                    alert('Please login to create a group');
-                    return;
-                }
-                
-                const groupName = prompt('Enter group name:');
-                if (!groupName) return;
-                
-                // 創建群組後直接進入成員管理頁面
-                const group = {
-                    id: Date.now().toString(),
-                    name: groupName,
-                    expenses: [],
-                    members: isLocalMode ? [
-                        {
-                            id: Date.now().toString(),
-                            name: 'You',
-                            role: 'admin',
-                            joinedAt: new Date().toISOString()
-                        }
-                    ] : [currentUser.uid], // Firebase 模式使用用戶 UID
-                    createdAt: new Date().toISOString(),
-                    createdBy: isLocalMode ? 'local' : currentUser.uid
-                };
-                
-                console.log('Creating group with members:', group.members);
-                console.log('Current user UID:', currentUser.uid);
-                
-                if (isLocalMode) {
-                    // 本地模式
-                    this.groups.unshift(group);
-                    this.saveGroups();
-                    this.renderGroups();
-                } else {
-                    // Firebase 模式
-                    try {
-                        if (!db) {
-                            throw new Error('Firebase not initialized');
-                        }
-                        
-                        console.log('Creating group in Firebase:', group);
-                        console.log('Firebase db object:', db);
-                        console.log('Firebase app:', firebase.app());
-                        
-                        await db.collection('groups').doc(group.id).set(group);
-                        console.log('Group created successfully in Firebase');
-                        
-                        this.groups.unshift(group);
-                        this.renderGroups();
-                    } catch (error) {
-                        console.error('Error creating group:', error);
-                        console.error('Error details:', error.message);
-                        console.error('Error code:', error.code);
-                        
-                        // 如果 Firebase 失敗，切換到本地模式
-                        if (error.message === 'Firebase not initialized') {
-                            console.log('Firebase not available, switching to local mode');
-                            isLocalMode = true;
-                            this.groups.unshift(group);
-                            this.saveGroups();
-                            this.renderGroups();
-                        } else {
-                            // 顯示更詳細的錯誤信息
-                            let errorMessage = 'Failed to create group. ';
-                            if (error.code === 'permission-denied') {
-                                errorMessage += 'Permission denied. Please check Firestore security rules.';
-                            } else if (error.code === 'unavailable') {
-                                errorMessage += 'Firebase service is unavailable. Please check your internet connection.';
-                            } else if (error.code === 'not-found') {
-                                errorMessage += 'Firestore database not found. Please check your Firebase configuration.';
-                            } else {
-                                errorMessage += `Error: ${error.message}`;
-                            }
-                            
-                            alert(errorMessage);
-                            return;
-                        }
-                    }
-                }
-                
-                // 直接進入成員管理頁面
-                this.showGroupMembers(group.id);
-            }
-            
-            showGroupMembers(groupId) {
-                this.currentGroupId = groupId;
-                const group = this.groups.find(g => g.id === groupId);
-                
-                document.getElementById('membersGroupTitle').textContent = `${group.name} - Members`;
-                document.getElementById('memberCount').textContent = `${group.members.length} members`;
-                document.querySelector('.group-members-section').style.display = 'block';
-                document.querySelector('.groups-section').style.display = 'none';
-                document.querySelector('.group-detail-section').style.display = 'none';
-                document.querySelector('.group-settings-section').style.display = 'none';
-                
-                this.renderMembers();
-            }
-            
-            showGroupDetail(groupId) {
-                this.currentGroupId = groupId;
-                const group = this.groups.find(g => g.id === groupId);
-                
-                document.getElementById('groupTitle').textContent = `${group.name} - Transactions`;
-                document.querySelector('.group-detail-section').style.display = 'block';
-                document.querySelector('.groups-section').style.display = 'none';
-                document.querySelector('.group-members-section').style.display = 'none';
-                document.querySelector('.group-settings-section').style.display = 'none';
-                document.querySelector('.group-balances-section').style.display = 'none';
-                
-                this.loadGroupMembers();
-                this.renderExpenses();
-                this.updateGroupStats();
-                this.setDefaultDateTime();
-            }
-            
-            showGroupSettings(groupId) {
-                this.currentGroupId = groupId;
-                const group = this.groups.find(g => g.id === groupId);
-                
-                document.getElementById('settingsGroupTitle').textContent = `${group.name} - Settings`;
-                document.querySelector('.group-settings-section').style.display = 'block';
-                document.querySelector('.groups-section').style.display = 'none';
-                document.querySelector('.group-detail-section').style.display = 'none';
-                document.querySelector('.group-members-section').style.display = 'none';
-                
-                // 載入群組資訊到表單
-                document.getElementById('groupNameEdit').value = group.name;
-                document.getElementById('groupDescription').value = group.description || '';
-            }
-            
-            async showGroupBalances(groupId) {
-                this.currentGroupId = groupId;
-                const group = this.groups.find(g => g.id === groupId);
-                
-                document.getElementById('balancesGroupTitle').textContent = `${group.name} - Balances`;
-                document.querySelector('.group-balances-section').style.display = 'block';
-                document.querySelector('.groups-section').style.display = 'none';
-                document.querySelector('.group-detail-section').style.display = 'none';
-                document.querySelector('.group-members-section').style.display = 'none';
-                document.querySelector('.group-settings-section').style.display = 'none';
-                
-                await this.renderBalances();
-            }
-            
-            showGroupsView() {
-                document.querySelector('.group-detail-section').style.display = 'none';
-                document.querySelector('.group-members-section').style.display = 'none';
-                document.querySelector('.group-settings-section').style.display = 'none';
-                document.querySelector('.group-balances-section').style.display = 'none';
-                document.querySelector('.groups-section').style.display = 'block';
-                this.currentGroupId = null;
-                this.updateTotalBalance();
-            }
-            
-            async addExpense() {
-                if (!this.currentGroupId) {
-                    console.log('No current group ID');
-                    return;
-                }
-                
-                const description = document.getElementById('description').value;
-                const amount = parseFloat(document.getElementById('amount').value);
-                const transactionDate = document.getElementById('transactionDate').value;
-                const paidBy = document.getElementById('paidBy').value;
-                
-                console.log('Form data:', { description, amount, transactionDate, paidBy });
-                
-                if (!description || !amount || !paidBy) {
-                    alert('Please fill in all required fields.');
-                    return;
-                }
-                
-                // 獲取分錢的成員
-                const splitBy = this.getSplitByMembers();
-                console.log('Split by members:', splitBy);
-                
-                if (splitBy.length === 0) {
-                    alert('Please select at least one person to split the cost with.');
-                    return;
-                }
-                
-                // 驗證自訂金額模式的總額
-                const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
-                if (splitMode === 'custom') {
-                    const totalSplitAmount = splitBy.reduce((sum, item) => sum + item.amount, 0);
-                    if (Math.abs(totalSplitAmount - amount) > 0.01) {
-                        alert(`Total split amount ($${totalSplitAmount.toFixed(2)}) must equal the expense amount ($${amount.toFixed(2)}).`);
-                        return;
-                    }
-                }
-                
-                const expense = {
-                    description,
-                    amount: Math.abs(amount), // 只儲存正數
-                    paidBy,
-                    splitBy,
-                    date: new Date(transactionDate).toISOString(),
-                    timestamp: Date.now()
-                };
-                
-                console.log('New expense:', expense);
-                
-                if (isLocalMode) {
-                    // 本地模式
-                    const group = this.groups.find(g => g.id === this.currentGroupId);
-                    group.expenses.push(expense);
-                    this.saveGroups();
-                this.renderExpenses();
-                    this.updateGroupStats();
-                    this.updateTotalBalance();
-                this.resetForm();
-                    console.log('Expense added successfully');
-                } else {
-                    // Firebase 模式
-                    try {
-                        await db.collection('groups').doc(this.currentGroupId).update({
-                            expenses: firebase.firestore.FieldValue.arrayUnion(expense)
-                        });
-                        
-                        // Update local data
-                        const group = this.groups.find(g => g.id === this.currentGroupId);
-                        group.expenses.push(expense);
-                        
-                this.renderExpenses();
-                        this.updateGroupStats();
-                        this.updateTotalBalance();
-                this.resetForm();
-                    } catch (error) {
-                        console.error('Error adding expense:', error);
-                        alert('Failed to add expense. Please try again.');
-                    }
-                }
-            }
-            
-            async deleteExpense(timestamp) {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const expenseToDelete = group.expenses.find(expense => expense.timestamp === timestamp);
-                
-                if (!expenseToDelete) return;
-                
-                if (isLocalMode) {
-                    // 本地模式
-                    group.expenses = group.expenses.filter(expense => expense.timestamp !== timestamp);
-                    this.saveGroups();
-                this.renderExpenses();
-                    this.updateGroupStats();
-                    this.updateTotalBalance();
-                } else {
-                    // Firebase 模式
-                    try {
-                        await db.collection('groups').doc(this.currentGroupId).update({
-                            expenses: firebase.firestore.FieldValue.arrayRemove(expenseToDelete)
-                        });
-                        
-                        // Update local data
-                        group.expenses = group.expenses.filter(expense => expense.timestamp !== timestamp);
-                        
-                this.renderExpenses();
-                        this.updateGroupStats();
-                        this.updateTotalBalance();
-                    } catch (error) {
-                        console.error('Error deleting expense:', error);
-                        alert('Failed to delete expense. Please try again.');
-                    }
-                }
-            }
-            
-            async clearAllExpenses() {
-                if (!confirm('Are you sure you want to clear all transactions in this group?')) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                
-                if (isLocalMode) {
-                    // 本地模式
-                    group.expenses = [];
-                    this.saveGroups();
-                    this.renderExpenses();
-                    this.updateGroupStats();
-                    this.updateTotalBalance();
-                } else {
-                    // Firebase 模式
-                    try {
-                        await db.collection('groups').doc(this.currentGroupId).update({
-                            expenses: []
-                        });
-                        
-                        // Update local data
-                        group.expenses = [];
-                        
-                        this.renderExpenses();
-                        this.updateGroupStats();
-                        this.updateTotalBalance();
-                    } catch (error) {
-                        console.error('Error clearing expenses:', error);
-                        alert('Failed to clear expenses. Please try again.');
-                    }
-                }
-            }
-            
-            saveGroups() {
-                if (isLocalMode) {
-                    localStorage.setItem('groups', JSON.stringify(this.groups));
-                }
-            }
-            
-            async addMember() {
-                const memberEmail = document.getElementById('memberName').value;
-                const memberRole = document.getElementById('memberRole').value;
-                
-                if (!memberEmail) return;
-                
-                // 驗證 email 格式
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(memberEmail)) {
-                    alert('Please enter a valid email address');
-                    return;
-                }
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                
-                if (isLocalMode) {
-                    // 本地模式
-                    const member = {
-                        id: Date.now().toString(),
-                        name: memberEmail,
-                        role: memberRole,
-                        joinedAt: new Date().toISOString()
-                    };
-                    group.members.push(member);
-                    this.saveGroups();
-                } else {
-                    // Firebase 模式
-                    try {
-                        // 先查找用戶是否存在
-                        const userQuery = await db.collection('users').where('email', '==', memberEmail).get();
-                        
-                        if (userQuery.empty) {
-                            // 用戶不存在，創建邀請記錄
-                            const invitation = {
-                                groupId: this.currentGroupId,
-                                groupName: group.name,
-                                invitedBy: currentUser.email,
-                                invitedEmail: memberEmail,
-                                role: memberRole,
-                                status: 'pending',
-                                createdAt: new Date().toISOString()
-                            };
-                            
-                            await db.collection('invitations').add(invitation);
-                            alert(`Invitation sent to ${memberEmail}. They will see this group when they register and accept the invitation.`);
-                        } else {
-                            // 用戶存在，直接添加到群組
-                            const userDoc = userQuery.docs[0];
-                            const userId = userDoc.id;
-                            
-                            await db.collection('groups').doc(this.currentGroupId).update({
-                                members: firebase.firestore.FieldValue.arrayUnion(userId)
-                            });
-                            
-                            // 更新本地數據
-                            group.members.push(userId);
-                            alert(`Member ${memberEmail} added successfully!`);
-                        }
-                    } catch (error) {
-                        console.error('Error adding member:', error);
-                        alert('Failed to add member. Please try again.');
-                        return;
-                    }
-                }
-                
-                this.renderMembers();
-                this.updateMemberCount();
-                this.resetMemberForm();
-            }
-            
-            async removeMember(memberId) {
-                if (!confirm('Are you sure you want to remove this member?')) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const memberToRemove = group.members.find(member => member.id === memberId);
-                
-                if (!memberToRemove) return;
-                
-                group.members = group.members.filter(member => member.id !== memberId);
-                
-                if (isLocalMode) {
-                    this.saveGroups();
-                } else {
-                    // Firebase 模式
-                    try {
-                        await db.collection('groups').doc(this.currentGroupId).update({
-                            members: firebase.firestore.FieldValue.arrayRemove(memberToRemove)
-                        });
-                    } catch (error) {
-                        console.error('Error removing member:', error);
-                        alert('Failed to remove member. Please try again.');
-                        return;
-                    }
-                }
-                
-                this.renderMembers();
-                this.updateMemberCount();
-            }
-            
-            async renderMembers() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const list = document.getElementById('membersList');
-                
-                if (group.members.length === 0) {
-                    list.innerHTML = '<div class="no-data">👥 No members yet</div>';
-                    return;
-                }
-                
-                if (isLocalMode) {
-                    // 本地模式：members 是物件陣列
-                    list.innerHTML = group.members.map(member => this.createMemberItem(member)).join('');
-                } else {
-                    // Firebase 模式：members 是 UID 陣列，需要查找用戶資料
-                    const memberData = await this.getMemberData(group.members);
-                    list.innerHTML = memberData.map(member => this.createMemberItem(member)).join('');
-                }
-            }
-            
-            async getMemberData(memberUids) {
-                if (isLocalMode) return memberUids;
-                
-                try {
-                    const memberPromises = memberUids.map(async (uid) => {
-                        if (uid === currentUser.uid) {
-                            return {
-                                id: uid,
-                                name: currentUser.displayName || currentUser.email.split('@')[0],
-                                role: 'admin',
-                                joinedAt: new Date().toISOString()
-                            };
-                        }
-                        
-                        try {
-                            const userDoc = await db.collection('users').doc(uid).get();
-                            if (userDoc.exists) {
-                                const userData = userDoc.data();
-                                return {
-                                    id: uid,
-                                    name: userData.displayName || userData.email.split('@')[0],
-                                    role: 'member',
-                                    joinedAt: userData.createdAt || new Date().toISOString()
-                                };
-                            }
-                        } catch (error) {
-                            console.error('Error fetching user data for UID:', uid, error);
-                        }
-                        
-                        // 如果無法獲取用戶資料，使用 UID 作為名稱
-                        return {
-                            id: uid,
-                            name: uid.substring(0, 8) + '...',
-                            role: 'member',
-                            joinedAt: new Date().toISOString()
-                        };
-                    });
-                    
-                    return await Promise.all(memberPromises);
-                } catch (error) {
-                    console.error('Error getting member data:', error);
-                    return memberUids.map(uid => ({
-                        id: uid,
-                        name: uid === currentUser.uid ? 'You' : uid.substring(0, 8) + '...',
-                        role: uid === currentUser.uid ? 'admin' : 'member',
-                        joinedAt: new Date().toISOString()
-                    }));
-                }
-            }
-            
-            createMemberItem(member) {
-                const roleIcon = member.role === 'admin' ? '👑' : '👤';
-                const roleClass = member.role === 'admin' ? 'admin' : 'member';
-                
-                return `
-                    <div class="member-item">
-                        <div class="member-info">
-                            <div class="member-name">${roleIcon} ${member.name}</div>
-                            <div class="member-role ${roleClass}">${member.role}</div>
-                            <div class="member-joined">Joined: ${new Date(member.joinedAt).toLocaleDateString('en-US')}</div>
-                        </div>
-                        <button class="delete-btn" onclick="expenseTracker.removeMember('${member.id}')">❌</button>
-                    </div>
-                `;
-            }
-            
-            updateMemberCount() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                if (group && group.members) {
-                    document.getElementById('memberCount').textContent = `${group.members.length} members`;
-                } else {
-                    document.getElementById('memberCount').textContent = '0 members';
-                }
-            }
-            
-            resetMemberForm() {
-                document.getElementById('addMemberForm').reset();
-            }
-            
-            async updateGroupInfo() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const newName = document.getElementById('groupNameEdit').value;
-                const description = document.getElementById('groupDescription').value;
-                
-                if (!newName) return;
-                
-                group.name = newName;
-                group.description = description;
-                
-                if (isLocalMode) {
-                    this.saveGroups();
-                } else {
-                    // Firebase 模式
-                    try {
-                        await db.collection('groups').doc(this.currentGroupId).update({
-                            name: newName,
-                            description: description
-                        });
-                    } catch (error) {
-                        console.error('Error updating group info:', error);
-                        alert('Failed to update group information. Please try again.');
-                        return;
-                    }
-                }
-                
-                this.renderGroups();
-                
-                // 更新群組詳情頁面的標題
-                document.getElementById('groupTitle').textContent = newName;
-                
-                alert('Group information updated successfully!');
-            }
-            
-            async deleteGroup() {
-                if (!this.currentGroupId) return;
-                
-                const groupName = this.groups.find(g => g.id === this.currentGroupId).name;
-                
-                if (!confirm(`Are you sure you want to delete the group "${groupName}"? This action cannot be undone!`)) {
-                    return;
-                }
-                
-                if (!confirm('This will permanently delete all transactions and members. Are you absolutely sure?')) {
-                    return;
-                }
-                
-                if (isLocalMode) {
-                    this.groups = this.groups.filter(g => g.id !== this.currentGroupId);
-                    this.saveGroups();
-                } else {
-                    // Firebase 模式
-                    try {
-                        await db.collection('groups').doc(this.currentGroupId).delete();
-                        this.groups = this.groups.filter(g => g.id !== this.currentGroupId);
-                    } catch (error) {
-                        console.error('Error deleting group:', error);
-                        alert('Failed to delete group. Please try again.');
-                        return;
-                    }
-                }
-                
-                this.renderGroups();
-                this.showGroupsView();
-                
-                alert('Group deleted successfully!');
-            }
-            
-            async leaveGroup() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const groupName = group.name;
-                
-                if (!confirm(`Are you sure you want to leave the group "${groupName}"?`)) {
-                    return;
-                }
-                
-                // 移除當前用戶（假設是第一個成員）
-                if (group.members.length > 1) {
-                    const memberToRemove = group.members[0];
-                    group.members = group.members.slice(1);
-                    
-                    if (isLocalMode) {
-                        this.saveGroups();
-                    } else {
-                        // Firebase 模式
-                        try {
-                            await db.collection('groups').doc(this.currentGroupId).update({
-                                members: firebase.firestore.FieldValue.arrayRemove(memberToRemove)
-                            });
-                        } catch (error) {
-                            console.error('Error leaving group:', error);
-                            alert('Failed to leave group. Please try again.');
-                            return;
-                        }
-                    }
-                    
-                    this.renderGroups();
-                    this.showGroupsView();
-                    alert('You have left the group!');
-                } else {
-                    // 如果是最後一個成員，刪除整個群組
-                    this.deleteGroup();
-                }
-            }
-            
-            renderGroups() {
-                const grid = document.getElementById('groupsGrid');
-                
-                if (this.groups.length === 0) {
-                    grid.innerHTML = '<div class="no-data">📁 No groups yet. Create your first group!</div>';
-                    return;
-                }
-                
-                grid.innerHTML = this.groups.map(group => this.createGroupCard(group)).join('');
-            }
-            
-            createGroupCard(group) {
-                // 計算總金額（所有交易的總和）
-                const totalAmount = group.expenses.reduce((sum, e) => sum + e.amount, 0);
-                const memberCount = group.members ? group.members.length : 0;
-                
-                return `
-                    <div class="group-card" onclick="expenseTracker.showGroupDetail('${group.id}')">
-                        <div class="group-icon">📁</div>
-                        <div class="group-name">${group.name}</div>
-                        <div class="group-balance">$${totalAmount.toFixed(2)}</div>
-                        <div class="group-transactions">${group.expenses.length} transactions</div>
-                        <div class="group-members">👥 ${memberCount} members</div>
-                    </div>
-                `;
-            }
-            
-            renderExpenses() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const list = document.getElementById('expenseList');
-                
-                list.innerHTML = group.expenses.length === 0 
-                    ? '<div class="no-data">📝 No transactions yet</div>'
-                    : group.expenses.map(expense => this.createExpenseItem(expense)).join('');
-            }
-            
-            createExpenseItem(expense) {
-                // Handle both Firestore timestamp and regular date
-                const date = expense.date && expense.date.toDate ? 
-                    expense.date.toDate() : 
-                    new Date(expense.date || expense.timestamp);
-                
-                // 獲取付錢的人和分錢的人的名稱
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const paidByName = group.members.find(m => m.id === expense.paidBy)?.name || 'Unknown';
-                
-                let splitByText = '';
-                if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
-                    // 自訂金額模式
-                    splitByText = expense.splitBy.map(splitItem => {
-                        const memberName = group.members.find(m => m.id === splitItem.memberId)?.name || 'Unknown';
-                        return `${memberName} ($${splitItem.amount.toFixed(2)})`;
-                    }).join(', ');
-                } else {
-                    // 平分模式
-                    splitByText = expense.splitBy.map(id => 
-                        group.members.find(m => m.id === id)?.name || 'Unknown'
-                    ).join(', ');
-                }
-                
-                return `
-                    <div class="expense-item">
-                        <div class="expense-info">
-                            <div class="expense-description">${expense.description}</div>
-                            <div class="expense-details">
-                                <div class="expense-paid-by">💰 Paid by: ${paidByName}</div>
-                                <div class="expense-split-by">👥 Split by: ${splitByText}</div>
-                                <div class="expense-date">📅 ${date.toLocaleDateString('en-US')} ${date.toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit'})}</div>
-                        </div>
-                        </div>
-                        <div class="expense-amount">
-                            $${expense.amount.toFixed(2)}
-                        </div>
-                        <button class="delete-btn" onclick="expenseTracker.deleteExpense(${expense.timestamp})">❌</button>
-                    </div>
-                `;
-            }
-            
-            
-            updateGroupStats() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const totalAmount = group.expenses.reduce((sum, e) => sum + e.amount, 0);
-                
-                // 只更新群組餘額顯示
-                document.getElementById('groupBalance').textContent = `$${totalAmount.toFixed(2)}`;
-            }
-            
-            updateTotalBalance() {
-                // 總餘額顯示已移除，此方法保留以備將來使用
-                return;
-            }
-            
-            
-            resetForm() {
-                document.getElementById('expenseForm').reset();
-                // 設定預設時間為現在
-                this.setDefaultDateTime();
-            }
-            
-            setDefaultDateTime() {
-                const now = new Date();
-                const localDateTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-                document.getElementById('transactionDate').value = localDateTime;
-            }
-            
-            async loadGroupMembers() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const paidBySelect = document.getElementById('paidBy');
-                const splitByContainer = document.getElementById('splitByContainer');
-                
-                // 清空現有選項
-                paidBySelect.innerHTML = '<option value="">Select who paid</option>';
-                splitByContainer.innerHTML = '';
-                
-                if (isLocalMode) {
-                    // 本地模式：members 是物件陣列
-                    group.members.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member.id;
-                        option.textContent = member.name;
-                        paidBySelect.appendChild(option);
-                    });
-                    this.renderSplitOptions(group.members);
-                } else {
-                    // Firebase 模式：members 是 UID 陣列
-                    const memberData = await this.getMemberData(group.members);
-                    memberData.forEach(member => {
-                        const option = document.createElement('option');
-                        option.value = member.id;
-                        option.textContent = member.name;
-                        paidBySelect.appendChild(option);
-                    });
-                    this.renderSplitOptions(memberData);
-                }
-                
-                // 綁定分錢模式切換事件
-                this.bindSplitModeEvents();
-            }
-            
-            renderSplitOptions(members) {
-                const splitByContainer = document.getElementById('splitByContainer');
-                const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
-                
-                splitByContainer.innerHTML = '';
-                
-                members.forEach(member => {
-                    const splitItem = document.createElement('div');
-                    splitItem.className = 'split-item';
-                    
-                    if (splitMode === 'equal') {
-                        // 平分模式
-                        splitItem.innerHTML = `
-                            <label class="split-label">
-                                <input type="checkbox" class="split-checkbox" value="${member.id}" checked>
-                                <span class="split-custom"></span>
-                                ${member.name}
-                            </label>
-                        `;
-                    } else {
-                        // 自訂金額模式
-                        splitItem.innerHTML = `
-                            <label class="split-label">
-                                <input type="checkbox" class="split-checkbox" value="${member.id}" checked>
-                                <span class="split-custom"></span>
-                                ${member.name}
-                            </label>
-                            <input type="number" class="split-amount-input" placeholder="0.00" step="0.01" min="0" data-member-id="${member.id}">
-                        `;
-                    }
-                    
-                    splitByContainer.appendChild(splitItem);
-                });
-            }
-            
-            bindSplitModeEvents() {
-                const splitModeRadios = document.querySelectorAll('input[name="splitMode"]');
-                splitModeRadios.forEach(radio => {
-                    radio.addEventListener('change', () => {
-                        if (!this.currentGroupId) return;
-                        const group = this.groups.find(g => g.id === this.currentGroupId);
-                        this.renderSplitOptions(group.members);
-                    });
-                });
-            }
-            
-            getSplitByMembers() {
-                const splitMode = document.querySelector('input[name="splitMode"]:checked').value;
-                const checkboxes = document.querySelectorAll('.split-checkbox:checked');
-                
-                if (splitMode === 'equal') {
-                    // 平分模式：返回選中的成員ID
-                    return Array.from(checkboxes).map(checkbox => checkbox.value);
-                } else {
-                    // 自訂金額模式：返回選中成員的ID和金額
-                    const splitData = [];
-                    checkboxes.forEach(checkbox => {
-                        const memberId = checkbox.value;
-                        const amountInput = document.querySelector(`.split-amount-input[data-member-id="${memberId}"]`);
-                        const amount = parseFloat(amountInput.value) || 0;
-                        
-                        if (amount > 0) {
-                            splitData.push({
-                                memberId: memberId,
-                                amount: amount
-                            });
-                        }
-                    });
-                    return splitData;
-                }
-            }
-            
-            async renderBalances() {
-                if (!this.currentGroupId) return;
-                
-                const group = this.groups.find(g => g.id === this.currentGroupId);
-                const balances = await this.calculateMemberBalances(group);
-                const list = document.getElementById('balancesList');
-                const summary = document.getElementById('balancesSummary');
-                const settlementContainer = document.getElementById('settlementContainer');
-                
-                
-                // 檢查是否所有人都結清了
-                const allSettled = balances.every(balance => Math.abs(balance.balance) < 0.01);
-                
-                if (allSettled) {
-                    summary.textContent = 'All settled up! ✓';
-                    summary.className = 'balances-summary settled';
-                    settlementContainer.style.display = 'none';
-                } else {
-                    summary.textContent = 'Some balances need to be settled';
-                    summary.className = 'balances-summary pending';
-                    settlementContainer.style.display = 'block';
-                    this.renderSettlementSuggestions(balances);
-                }
-                
-                list.innerHTML = balances.map(balance => this.createBalanceItem(balance)).join('');
-            }
-            
-            async calculateMemberBalances(group) {
-                const memberBalances = {};
-                
-                // 初始化所有成員的餘額為 0
-                if (isLocalMode) {
-                    // 本地模式：members 是對象數組
-                    group.members.forEach(member => {
-                        memberBalances[member.id] = {
-                            id: member.id,
-                            name: member.name,
-                            balance: 0
-                        };
-                    });
-                } else {
-                    // Firebase 模式：members 是 UID 數組，需要獲取用戶數據
-                    const memberData = await this.getMemberData(group.members);
-                    group.members.forEach(memberUid => {
-                        const memberInfo = memberData.find(m => m.id === memberUid);
-                        memberBalances[memberUid] = {
-                            id: memberUid,
-                            name: memberInfo ? memberInfo.name : 'Unknown User',
-                            balance: 0
-                        };
-                    });
-                }
-                
-                // 計算每筆交易對餘額的影響
-                group.expenses.forEach(expense => {
-                    // 檢查是否為新的自訂金額格式
-                    if (expense.splitBy && expense.splitBy.length > 0 && typeof expense.splitBy[0] === 'object') {
-                        // 自訂金額模式
-                        expense.splitBy.forEach(splitItem => {
-                            if (memberBalances[splitItem.memberId]) {
-                                memberBalances[splitItem.memberId].balance -= splitItem.amount;
-                            }
-                        });
-                    } else {
-                        // 平分模式（向後兼容）
-                        const splitAmount = expense.amount / expense.splitBy.length;
-                        expense.splitBy.forEach(memberId => {
-                            if (memberBalances[memberId]) {
-                                memberBalances[memberId].balance -= splitAmount;
-                            }
-                        });
-                    }
-                    
-                    // 付錢的人收到錢
-                    if (memberBalances[expense.paidBy]) {
-                        memberBalances[expense.paidBy].balance += expense.amount;
-                    }
-                });
-                
-                // 轉換為陣列並排序（欠錢的在前，被欠錢的在後）
-                return Object.values(memberBalances).sort((a, b) => a.balance - b.balance);
-            }
-            
-            createBalanceItem(balance) {
-                const isOwed = balance.balance > 0.01;
-                const isOwing = balance.balance < -0.01;
-                const isSettled = Math.abs(balance.balance) < 0.01;
-                
-                let balanceClass = 'settled';
-                let balanceText = '$0 ✓';
-                let balanceBar = '';
-                
-                if (isOwed) {
-                    balanceClass = 'owed';
-                    balanceText = `+$${balance.balance.toFixed(2)}`;
-                    // 修復條形圖寬度計算，使用更合理的比例
-                    const maxAmount = 500; // 設定最大金額為500，超過這個數值就顯示100%寬度
-                    const barWidth = Math.min(Math.abs(balance.balance) / maxAmount, 1) * 100;
-                    balanceBar = `<div class="balance-bar owed" style="width: ${barWidth}%"></div>`;
-                } else if (isOwing) {
-                    balanceClass = 'owing';
-                    balanceText = `-$${Math.abs(balance.balance).toFixed(2)}`;
-                    // 修復條形圖寬度計算，使用更合理的比例
-                    const maxAmount = 500; // 設定最大金額為500，超過這個數值就顯示100%寬度
-                    const barWidth = Math.min(Math.abs(balance.balance) / maxAmount, 1) * 100;
-                    balanceBar = `<div class="balance-bar owing" style="width: ${barWidth}%"></div>`;
-                }
-                
-                return `
-                    <div class="balance-item">
-                        <div class="member-avatar">👤</div>
-                        <div class="member-name">${balance.name}</div>
-                        <div class="balance-display">
-                            ${balanceBar}
-                            <div class="balance-amount ${balanceClass}">${balanceText}</div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            renderSettlementSuggestions(balances) {
-                const suggestions = this.generateSettlementSuggestions(balances);
-                const container = document.getElementById('settlementSuggestions');
-                
-                if (suggestions.length === 0) {
-                    container.innerHTML = '<div class="no-suggestions">No settlement needed!</div>';
-                    return;
-                }
-                
-                container.innerHTML = suggestions.map(suggestion => `
-                    <div class="settlement-suggestion">
-                        <div class="suggestion-text">
-                            <strong>${suggestion.from}</strong> should pay <strong>${suggestion.to}</strong>
-                        </div>
-                        <div class="suggestion-amount">$${suggestion.amount.toFixed(2)}</div>
-                    </div>
-                `).join('');
-            }
-            
-            generateSettlementSuggestions(balances) {
-                const suggestions = [];
-                // 創建餘額的深拷貝，避免修改原始數據
-                const balancesCopy = balances.map(b => ({ ...b }));
-                const owing = balancesCopy.filter(b => b.balance < -0.01);
-                const owed = balancesCopy.filter(b => b.balance > 0.01);
-                
-                let owingIndex = 0;
-                let owedIndex = 0;
-                
-                while (owingIndex < owing.length && owedIndex < owed.length) {
-                    const owingAmount = Math.abs(owing[owingIndex].balance);
-                    const owedAmount = owed[owedIndex].balance;
-                    const settleAmount = Math.min(owingAmount, owedAmount);
-                    
-                    suggestions.push({
-                        from: owing[owingIndex].name,
-                        to: owed[owedIndex].name,
-                        amount: settleAmount
-                    });
-                    
-                    owing[owingIndex].balance += settleAmount;
-                    owed[owedIndex].balance -= settleAmount;
-                    
-                    if (Math.abs(owing[owingIndex].balance) < 0.01) owingIndex++;
-                    if (Math.abs(owed[owedIndex].balance) < 0.01) owedIndex++;
-                }
-                
-                return suggestions;
-            }
-        }
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
         
-        // Initialize application
-        const expenseTracker = new GroupExpenseTracker();
+        // 確保 Firebase 初始化完成後再啟動應用程式
+        window.addEventListener('load', () => {
+            if (typeof app === 'undefined') {
+                window.app = new GroupExpenseTracker();
+            }
+        });
     </script>
+    <script src="js/auth.js"></script>
+    <script src="js/groups.js"></script>
+    <script src="js/expenses.js"></script>
+    <script src="js/members.js"></script>
+    <script src="js/balances.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>

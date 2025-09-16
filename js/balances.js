@@ -66,7 +66,13 @@ class BalancesManager {
         // 蒐集所有在交易中出現過的參與者（包含已離開的成員與 pending email）
         const participantIds = new Set();
         // 現有成員
-        (group.members || []).forEach(uid => participantIds.add(uid));
+        (group.members || []).forEach(member => {
+            if (typeof member === 'object' && member.id) {
+                participantIds.add(member.id);
+            } else {
+                participantIds.add(member);
+            }
+        });
         // 待加入 email
         (Array.isArray(group.pendingMembers) ? group.pendingMembers : []).forEach(email => participantIds.add(email));
         // 掃描交易，加入 paidBy 與 splitBy
@@ -115,7 +121,15 @@ class BalancesManager {
     // 根據 id 解析顯示名稱：email → 原字串；UID → 讀取 users.displayName 或 email 前綴
     async resolveDisplayName(id) {
         if (!id) return 'Unknown User';
-        if (typeof id === 'string' && id.includes('@')) return id; // pending email
+        
+        // 如果 id 是物件，直接返回 name 屬性
+        if (typeof id === 'object' && id.name) {
+            return id.name;
+        }
+        
+        // 如果 id 是字符串且包含 @，直接返回（pending email）
+        if (typeof id === 'string' && id.includes('@')) return id;
+        
         try {
             if (this.app.currentUser && id === this.app.currentUser.uid) {
                 return this.app.currentUser.displayName || this.app.currentUser.email.split('@')[0];
@@ -133,6 +147,11 @@ class BalancesManager {
     
     async getMemberData(memberUids) {
         if (this.isLocalMode) return memberUids;
+        
+        // 如果 memberUids 已經是完整物件，直接返回
+        if (memberUids.length > 0 && typeof memberUids[0] === 'object' && memberUids[0].name) {
+            return memberUids;
+        }
         
         const currentUser = this.app.currentUser;
         if (!currentUser) {

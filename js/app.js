@@ -231,6 +231,10 @@ class GroupExpenseTracker {
     // 綁定事件監聽器
     bindEvents() {
         // 身份驗證事件
+        this.bindElement('loginForm', 'submit', (e) => {
+            e.preventDefault();
+            this.authManager.login();
+        });
         this.bindElement('loginBtn', 'click', () => this.authManager.login());
         this.bindElement('registerBtn', 'click', () => this.showRegistrationForm());
         this.bindElement('logoutBtn', 'click', () => this.authManager.logout());
@@ -339,7 +343,4 @@ class GroupExpenseTracker {
     }
 }
 
-// 當頁面載入完成時初始化應用程式
-document.addEventListener('DOMContentLoaded', () => {
-    window.app = new GroupExpenseTracker();
-});
+// 應用程式初始化現在由 index.html 中的 window.addEventListener('load') 控制

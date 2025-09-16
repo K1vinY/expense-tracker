@@ -21,12 +21,12 @@
                 </div>
                 
                 <!-- Login Form (Hidden by default) -->
-                <div class="login-form" id="loginForm">
-                    <input type="email" id="emailInput" placeholder="Email" class="pixel-input">
-                    <input type="password" id="passwordInput" placeholder="Password" class="pixel-input">
-                    <button id="loginBtn" class="pixel-button primary">Login</button>
-                    <button id="registerBtn" class="pixel-button secondary">Register</button>
-                </div>
+                <form class="login-form" id="loginForm">
+                    <input type="email" id="emailInput" placeholder="Email" class="pixel-input" required>
+                    <input type="password" id="passwordInput" placeholder="Password" class="pixel-input" required>
+                    <button type="submit" id="loginBtn" class="pixel-button primary">Login</button>
+                    <button type="button" id="registerBtn" class="pixel-button secondary">Register</button>
+                </form>
             </div>
         </header>
 

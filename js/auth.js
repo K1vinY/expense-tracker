@@ -22,11 +22,13 @@ class AuthManager {
         } catch (error) {
             console.error('Login error:', error);
             if (error.code === 'auth/user-not-found') {
-                alert('No account found with this email address');
+                alert('No account found with this email address. Please register first.');
             } else if (error.code === 'auth/wrong-password') {
                 alert('Incorrect password');
             } else if (error.code === 'auth/invalid-email') {
                 alert('Invalid email address');
+            } else if (error.code === 'auth/invalid-login-credentials') {
+                alert('Invalid login credentials. Please check your email and password, or register a new account.');
             } else {
                 alert('Login failed: ' + error.message);
             }
