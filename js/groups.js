@@ -45,19 +45,34 @@ class GroupsManager {
                 const testSnapshot = await this.db.collection('groups').limit(5).get();
                 console.log('Basic query result:', testSnapshot.docs.length, 'documents');
                 
-                // 再嘗試用戶特定查詢
-                console.log('Testing user-specific query...');
-                const snapshot = await this.db.collection('groups')
-                    .where('members', 'array-contains', currentUser.uid)
-                    .get();
+                // 載入所有群組，然後在客戶端過濾
+                console.log('Loading all groups...');
+                const snapshot = await this.db.collection('groups').get();
                 
-                console.log('User-specific query result:', snapshot.docs.length, 'documents');
-                console.log('Query docs:', snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() })));
+                console.log('All groups result:', snapshot.docs.length, 'documents');
                 
-                this.groups = snapshot.docs.map(doc => ({
+                // 在客戶端過濾包含當前用戶的群組
+                const allGroups = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
+                
+                // 過濾包含當前用戶的群組
+                this.groups = allGroups.filter(group => {
+                    // 檢查 members 陣列中是否包含當前用戶的 UID
+                    if (Array.isArray(group.members)) {
+                        return group.members.some(member => {
+                            if (typeof member === 'object' && member.id) {
+                                return member.id === currentUser.uid;
+                            }
+                            return member === currentUser.uid;
+                        });
+                    }
+                    return false;
+                });
+                
+                console.log('Filtered groups for user:', this.groups.length, 'groups');
+                console.log('User groups:', this.groups.map(g => ({ id: g.id, name: g.name, members: g.members })));
                 this.app.groups = this.groups; // 同步到主應用程式
                 console.log('Loaded groups from Firebase:', this.groups);
                 this.renderGroups();
